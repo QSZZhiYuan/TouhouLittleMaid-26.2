@@ -1,0 +1,28 @@
+package com.github.tartaricacid.touhoulittlemaid.client.gui.widget.button;
+
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+
+@OnlyIn(Dist.CLIENT)
+public class ImageButtonWithId extends TouhouImageButton {
+    private final int index;
+
+    public ImageButtonWithId(int index, int xIn, int yIn, int widthIn, int heightIn, int xTexStartIn, int yTexStartIn, int yDiffTextIn, Identifier resourceLocationIn, OnPress onPressIn) {
+        this(index, xIn, yIn, widthIn, heightIn, xTexStartIn, yTexStartIn, yDiffTextIn, resourceLocationIn, 256, 256, onPressIn);
+    }
+
+    public ImageButtonWithId(int index, int xIn, int yIn, int widthIn, int heightIn, int xTexStartIn, int yTexStartIn, int yDiffTextIn, Identifier resourceLocationIn, int textureWidth, int textureHeight, OnPress onPressIn) {
+        this(index, xIn, yIn, widthIn, heightIn, xTexStartIn, yTexStartIn, yDiffTextIn, resourceLocationIn, textureWidth, textureHeight, onPressIn, Component.empty());
+    }
+
+    public ImageButtonWithId(int index, int x, int y, int width, int height, int xTexStart, int yTexStart, int yDiffText, Identifier Identifier, int textureWidth, int textureHeight, OnPress onPress, Component title) {
+        super(x, y, width, height, xTexStart, yTexStart, yDiffText, Identifier, textureWidth, textureHeight, onPress, title);
+        this.index = index;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+}

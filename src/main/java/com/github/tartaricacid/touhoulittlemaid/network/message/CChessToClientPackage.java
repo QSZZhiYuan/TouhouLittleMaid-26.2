@@ -1,0 +1,37 @@
+package com.github.tartaricacid.touhoulittlemaid.network.message;
+
+import com.github.tartaricacid.touhoulittlemaid.network.ClientPacketHelper;
+import com.github.tartaricacid.touhoulittlemaid.util.CChessUtil;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.util.Util;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+
+import java.util.concurrent.CompletableFuture;
+
+import static com.github.tartaricacid.touhoulittlemaid.util.ResourceLocationUtil.getResourceLocation;
+
+public record CChessToClientPackage(BlockPos pos, String fenData) implements CustomPacketPayload {
+    public static final CustomPacketPayload.Type<CChessToClientPackage> TYPE = new CustomPacketPayload.Type<>(getResourceLocation("cchess_to_client"));
+    public static final StreamCodec<ByteBuf, CChessToClientPackage> STREAM_CODEC = StreamCodec.composite(
+            BlockPos.STREAM_CODEC,
+            CChessToClientPackage::pos,
+            ByteBufCodecs.STRING_UTF8,
+            CChessToClientPackage::fenData,
+            CChessToClientPackage::new
+    );
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
+    }
+
+    public static void handle(CChessToClientPackage message, IPayloadContext context) {
+        if (context.flow().isClientbound()) {
+            context.enqueueWork(() -> CompletableFuture.runAsync(() -> ClientPacketHelper.handleClient("com.github.tartaricacid.touhoulittlemaid.client.network.ClientPacketHandlers", "handleCChessToClient", message), Util.backgroundExecutor()));
+        }
+    }
+}

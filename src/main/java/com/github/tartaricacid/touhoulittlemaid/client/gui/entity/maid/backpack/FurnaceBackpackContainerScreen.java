@@ -1,0 +1,50 @@
+package com.github.tartaricacid.touhoulittlemaid.client.gui.entity.maid.backpack;
+
+import com.github.tartaricacid.touhoulittlemaid.TouhouLittleMaid;
+import com.github.tartaricacid.touhoulittlemaid.client.gui.entity.maid.AbstractMaidContainerGui;
+import com.github.tartaricacid.touhoulittlemaid.client.gui.widget.button.BaubleButton;
+import com.github.tartaricacid.touhoulittlemaid.compat.stub.CuriosCompat;
+import com.github.tartaricacid.touhoulittlemaid.inventory.container.backpack.FurnaceBackpackContainer;
+import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.player.Inventory;
+
+// @IPNPlayerSideOnly
+// @IPNGuiHint(button = IPNButton.SORT, horizontalOffset = -36, bottom = -12)
+// @IPNGuiHint(button = IPNButton.SORT_COLUMNS, horizontalOffset = -24, bottom = -24)
+// @IPNGuiHint(button = IPNButton.SORT_ROWS, horizontalOffset = -12, bottom = -36)
+// @IPNGuiHint(button = IPNButton.SHOW_EDITOR, horizontalOffset = -5)
+// @IPNGuiHint(button = IPNButton.SETTINGS, horizontalOffset = -5)
+public class FurnaceBackpackContainerScreen extends AbstractMaidContainerGui<FurnaceBackpackContainer> implements IBackpackContainerScreen {
+    private static final Identifier BACKPACK = Identifier.fromNamespaceAndPath(TouhouLittleMaid.MOD_ID, "textures/gui/maid_furnace.png");
+
+    public FurnaceBackpackContainerScreen(FurnaceBackpackContainer container, Inventory inv, Component titleIn) {
+        super(container, inv, titleIn);
+    }
+
+    @Override
+    protected void initAdditionWidgets() {
+        BaubleButton button = this.getBaubleButton(maid, leftPos, topPos);
+        this.addRenderableWidget(button);
+
+        // 添加 curios 兼容按钮
+        if (CuriosCompat.isLoadedOrEnable()) {
+            this.addRenderableWidget(this.getCuriosButton(maid, leftPos, topPos));
+        }
+    }
+
+    @Override
+    protected void renderBg(GuiGraphicsExtractor graphics, float partialTicks, int x, int y) {
+        super.renderBg(graphics, partialTicks, x, y);
+        graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, BACKPACK, leftPos + 85, topPos + 36, 0, 0, 165, 128, 256, 256);
+        if (this.menu.isLit()) {
+            int litProgress = this.menu.getLitProgress();
+            graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, BACKPACK, leftPos + 161, topPos + 122 + 12 - litProgress, 165, 12 - litProgress, 14, litProgress + 1, 256, 256);
+        }
+        int burnProgress = this.menu.getBurnProgress();
+        graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, BACKPACK, leftPos + 184, topPos + 120, 165, 14, burnProgress + 1, 16, 256, 256);
+    }
+}

@@ -1,0 +1,98 @@
+package com.github.tartaricacid.touhoulittlemaid.client.gui.widget.button;
+
+import com.github.tartaricacid.touhoulittlemaid.api.client.gui.ITooltipButton;
+import com.github.tartaricacid.touhoulittlemaid.api.task.IMaidTask;
+import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Supplier;
+
+@OnlyIn(Dist.CLIENT)
+public class TaskButton extends Button implements ITooltipButton {
+    private final IMaidTask task;
+    private final boolean enable;
+    private final Identifier Identifier;
+    private final int xTexStart;
+    private final int yTexStart;
+    private final int yDiffTex;
+    private final int textureWidth;
+    private final int textureHeight;
+    private final List<Component> tooltips;
+
+    public TaskButton(IMaidTask task, boolean enable, int xIn, int yIn, int widthIn, int heightIn, int xTexStartIn, int yTexStartIn, int yDiffTextIn, Identifier resourceLocationIn, OnPress onPressIn) {
+        this(task, enable, xIn, yIn, widthIn, heightIn, xTexStartIn, yTexStartIn, yDiffTextIn, resourceLocationIn, 256, 256, onPressIn);
+    }
+
+    public TaskButton(IMaidTask task, boolean enable, int xIn, int yIn, int widthIn, int heightIn, int xTexStartIn, int yTexStartIn, int yDiffTextIn, Identifier resourceLocationIn, int textureWidth, int textureHeight, OnPress onPressIn) {
+        this(task, enable, xIn, yIn, widthIn, heightIn, xTexStartIn, yTexStartIn, yDiffTextIn, resourceLocationIn, textureWidth, textureHeight, onPressIn, Component.empty());
+    }
+
+    public TaskButton(IMaidTask task, boolean enable, int x, int y, int width, int height, int xTexStart, int yTexStart, int yDiffText, Identifier Identifier, int textureWidth, int textureHeight, OnPress onPress, Component title) {
+        this(task, enable, x, y, width, height, xTexStart, yTexStart, yDiffText, Identifier, textureWidth, textureHeight, onPress, Collections.emptyList(), title);
+    }
+
+    public TaskButton(IMaidTask task, boolean enable, int x, int y, int width, int height, int xTexStart, int yTexStart, int yDiffText, Identifier Identifier, int textureWidth, int textureHeight, OnPress onPress, List<Component> tooltips, Component title) {
+        super(x, y, width, height, title, onPress, Supplier::get);
+        this.task = task;
+        this.enable = enable;
+        this.textureWidth = textureWidth;
+        this.textureHeight = textureHeight;
+        this.xTexStart = xTexStart;
+        this.yTexStart = yTexStart;
+        this.yDiffTex = yDiffText;
+        this.Identifier = Identifier;
+        this.tooltips = tooltips;
+    }
+
+    public IMaidTask getTask() {
+        return task;
+    }
+
+    @Override
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        // 禁用声音
+        if (!enable) {
+            return false;
+        }
+        return super.mouseClicked(event, doubleClick);
+    }
+
+    @Override
+    @SuppressWarnings("all")
+    protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks) {
+        Minecraft minecraft = Minecraft.getInstance();
+        int i = this.yTexStart;
+        if (this.isHoveredOrFocused()) {
+            i += this.yDiffTex;
+        }
+        graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, this.Identifier, this.getX(), this.getY(), (float) this.xTexStart, (float) i, this.width, this.height, this.textureWidth, this.textureHeight);
+        if (!enable) {
+            // 不知为啥设定渲染高度是19，但渲染出来的是20...
+            graphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, 0x80000000);
+            graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, this.Identifier, this.getX() + 72, this.getY(), (float) 93, (float) 68, 7, 19, this.textureWidth, this.textureHeight);
+        }
+        graphics.item(task.getIcon(), this.getX() + 2, this.getY() + 2);
+        graphics.text(minecraft.font, task.getName(), this.getX() + 23, this.getY() + 6, 0xFF333333, false);
+    }
+
+    @Override
+    public boolean isTooltipHovered() {
+        return this.isHovered();
+    }
+
+    @Override
+    public void renderTooltip(GuiGraphicsExtractor graphics, Minecraft mc, int mouseX, int mouseY) {
+        if (!this.tooltips.isEmpty()) {
+            graphics.setComponentTooltipForNextFrame(mc.font, this.tooltips, mouseX, mouseY);
+        }
+    }
+}

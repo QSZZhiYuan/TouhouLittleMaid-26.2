@@ -1,0 +1,164 @@
+package com.github.tartaricacid.touhoulittlemaid.crafting;
+
+import com.github.tartaricacid.touhoulittlemaid.entity.item.EntityBox;
+import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
+import com.github.tartaricacid.touhoulittlemaid.init.InitDataComponent;
+import com.github.tartaricacid.touhoulittlemaid.init.InitEntities;
+import com.github.tartaricacid.touhoulittlemaid.init.InitRecipes;
+import com.github.tartaricacid.touhoulittlemaid.item.ItemFilm;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.NonNullList;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.ProblemReporter;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemStackTemplate;
+import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.crafting.*;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.ValueInput;
+import org.jetbrains.annotations.NotNull;
+
+import javax.annotation.Nullable;
+import java.util.List;
+import java.util.Objects;
+
+public class AltarRecipe extends ShapelessRecipe {
+    private final String group;
+    private final CraftingBookCategory category;
+    private final float power;
+    private final ItemStackTemplate result;
+    private final Identifier entityType;
+    private final String langKey;
+    private final NonNullList<Ingredient> ingredients;
+
+    public AltarRecipe(String group, CraftingBookCategory category, NonNullList<Ingredient> ingredients, float power, ItemStackTemplate result, Identifier entityType, String langKey) {
+        super(new Recipe.CommonInfo(false), new CraftingRecipe.CraftingBookInfo(category, group), result, ingredients);
+        this.group = group;
+        this.category = category;
+        this.power = power;
+        this.result = result;
+        this.entityType = entityType;
+        this.langKey = langKey;
+        this.ingredients = ingredients;
+    }
+
+    public Identifier getId() {
+        return InitRecipes.ALTAR_CRAFTING.getId();
+    }
+
+    public String getRecipeString() {
+        String recipeId = this.getResult().get(InitDataComponent.RECIPES_ID_TAG);
+        return Objects.requireNonNullElse(recipeId, "spawn_box");
+    }
+
+    public boolean isItemCraft() {
+        return entityType.equals(BuiltInRegistries.ENTITY_TYPE.getKey(EntityTypes.ITEM));
+    }
+
+    public void spawnOutputEntity(ServerLevel world, BlockPos pos, @Nullable List<ItemStack> list) {
+        EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getValue(entityType);
+
+        if (type == EntityTypes.ITEM) {
+            this.spawnItem(world, pos);
+            return;
+        }
+
+        if (type == InitEntities.BOX.get()) {
+            this.spawnBoxMaid(world, pos);
+            return;
+        }
+
+        if (type == InitEntities.MAID.get()) {
+            this.rebornMaid(world, pos, list);
+            return;
+        }
+
+        type.spawn(world, pos, EntitySpawnReason.EVENT);
+    }
+
+    private void rebornMaid(ServerLevel world, BlockPos pos, @Nullable List<ItemStack> list) {
+        ItemStack itemFilm = ItemStack.EMPTY;
+        if (list != null) {
+            itemFilm = list.stream().filter(stack -> stack.getItem() instanceof ItemFilm).findFirst().orElse(ItemStack.EMPTY);
+        }
+        EntityMaid maid = new EntityMaid(world);
+        CustomData compoundData = itemFilm.get(InitDataComponent.MAID_INFO);
+        if (compoundData != null) {
+            CompoundTag maidCompound = compoundData.copyTag();
+            ValueInput input = TagValueInput.create(ProblemReporter.DISCARDING, world.registryAccess(), maidCompound);
+            maid.readAdditionalSaveData(input);
+        } else {
+            maid.finalizeSpawn(world, world.getCurrentDifficultyAt(pos), EntitySpawnReason.SPAWN_ITEM_USE, null);
+        }
+        maid.setPos(pos.getX(), pos.getY(), pos.getZ());
+        world.addFreshEntity(maid);
+    }
+
+    private void spawnBoxMaid(ServerLevel world, BlockPos pos) {
+        EntityBox box = new EntityBox(world);
+        box.setPos(pos.getX(), pos.getY(), pos.getZ());
+
+        EntityMaid maid = new EntityMaid(world);
+        maid.setPos(pos.getX(), pos.getY(), pos.getZ());
+        maid.finalizeSpawn(world, world.getCurrentDifficultyAt(pos), EntitySpawnReason.SPAWN_ITEM_USE, null);
+        maid.startRiding(box, true, true);
+
+        world.tryAddFreshEntityWithPassengers(box);
+    }
+
+    private void spawnItem(ServerLevel world, BlockPos pos) {
+        ItemEntity itemEntity = new ItemEntity(world, pos.getX(), pos.getY(), pos.getZ(), this.getResult());
+        world.addFreshEntity(itemEntity);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public @NotNull RecipeType<CraftingRecipe> getType() {
+        return (RecipeType<CraftingRecipe>) (RecipeType) InitRecipes.ALTAR_CRAFTING.get();
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public RecipeSerializer<ShapelessRecipe> getSerializer() {
+        return (RecipeSerializer<ShapelessRecipe>) (RecipeSerializer) InitRecipes.ALTAR_RECIPE_SERIALIZER.get();
+    }
+
+    public float getPower() {
+        return power;
+    }
+
+    public CraftingBookCategory getCategory() {
+        return category;
+    }
+
+    public ItemStack getResult() {
+        return result.create();
+    }
+
+    public ItemStackTemplate getResultTemplate() {
+        return result;
+    }
+
+    public Identifier getEntityType() {
+        return entityType;
+    }
+
+    public String getLangKey() {
+        return langKey;
+    }
+
+    public NonNullList<Ingredient> getIngredients() {
+        return ingredients;
+    }
+
+    public String getGroup() {
+        return group;
+    }
+}

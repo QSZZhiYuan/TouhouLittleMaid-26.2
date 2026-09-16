@@ -1,0 +1,118 @@
+package com.github.tartaricacid.touhoulittlemaid.client.renderer.entity;
+
+import com.github.tartaricacid.touhoulittlemaid.TouhouLittleMaid;
+import com.github.tartaricacid.touhoulittlemaid.client.model.bedrock.SimpleBedrockModel;
+import com.github.tartaricacid.touhoulittlemaid.client.resource.BedrockModelLoader;
+import com.github.tartaricacid.touhoulittlemaid.config.subconfig.MiscConfig;
+import com.github.tartaricacid.touhoulittlemaid.entity.monster.EntityFairy;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.MobRenderer;
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.resources.Identifier;
+
+
+
+public class EntityFairyRenderer extends MobRenderer<EntityFairy, EntityFairyRenderer.FairyRenderState, SimpleBedrockModel<LivingEntityRenderState>> {
+    private static final Identifier TEXTURE_0 = Identifier.fromNamespaceAndPath(TouhouLittleMaid.MOD_ID, "textures/bedrock/entity/maid_fairy/maid_fairy_0.png");
+    private static final Identifier TEXTURE_1 = Identifier.fromNamespaceAndPath(TouhouLittleMaid.MOD_ID, "textures/bedrock/entity/maid_fairy/maid_fairy_1.png");
+    private static final Identifier TEXTURE_2 = Identifier.fromNamespaceAndPath(TouhouLittleMaid.MOD_ID, "textures/bedrock/entity/maid_fairy/maid_fairy_2.png");
+    private static final Identifier TEXTURE_3 = Identifier.fromNamespaceAndPath(TouhouLittleMaid.MOD_ID, "textures/bedrock/entity/maid_fairy/maid_fairy_3.png");
+    private static final Identifier TEXTURE_4 = Identifier.fromNamespaceAndPath(TouhouLittleMaid.MOD_ID, "textures/bedrock/entity/maid_fairy/maid_fairy_4.png");
+    private static final Identifier TEXTURE_5 = Identifier.fromNamespaceAndPath(TouhouLittleMaid.MOD_ID, "textures/bedrock/entity/maid_fairy/maid_fairy_5.png");
+    private static final Identifier TEXTURE_6 = Identifier.fromNamespaceAndPath(TouhouLittleMaid.MOD_ID, "textures/bedrock/entity/maid_fairy/maid_fairy_6.png");
+    private static final Identifier TEXTURE_7 = Identifier.fromNamespaceAndPath(TouhouLittleMaid.MOD_ID, "textures/bedrock/entity/maid_fairy/maid_fairy_7.png");
+    private static final Identifier TEXTURE_8 = Identifier.fromNamespaceAndPath(TouhouLittleMaid.MOD_ID, "textures/bedrock/entity/maid_fairy/maid_fairy_8.png");
+    private static final Identifier TEXTURE_9 = Identifier.fromNamespaceAndPath(TouhouLittleMaid.MOD_ID, "textures/bedrock/entity/maid_fairy/maid_fairy_9.png");
+    private static final Identifier TEXTURE_10 = Identifier.fromNamespaceAndPath(TouhouLittleMaid.MOD_ID, "textures/bedrock/entity/maid_fairy/maid_fairy_10.png");
+    private static final Identifier TEXTURE_11 = Identifier.fromNamespaceAndPath(TouhouLittleMaid.MOD_ID, "textures/bedrock/entity/maid_fairy/maid_fairy_11.png");
+    private static final Identifier TEXTURE_12 = Identifier.fromNamespaceAndPath(TouhouLittleMaid.MOD_ID, "textures/bedrock/entity/maid_fairy/maid_fairy_12.png");
+    private static final Identifier TEXTURE_13 = Identifier.fromNamespaceAndPath(TouhouLittleMaid.MOD_ID, "textures/bedrock/entity/maid_fairy/maid_fairy_13.png");
+    private static final Identifier TEXTURE_14 = Identifier.fromNamespaceAndPath(TouhouLittleMaid.MOD_ID, "textures/bedrock/entity/maid_fairy/maid_fairy_14.png");
+    private static final Identifier TEXTURE_15 = Identifier.fromNamespaceAndPath(TouhouLittleMaid.MOD_ID, "textures/bedrock/entity/maid_fairy/maid_fairy_15.png");
+    private static final Identifier TEXTURE_16 = Identifier.fromNamespaceAndPath(TouhouLittleMaid.MOD_ID, "textures/bedrock/entity/maid_fairy/maid_fairy_16.png");
+    private static final Identifier TEXTURE_17 = Identifier.fromNamespaceAndPath(TouhouLittleMaid.MOD_ID, "textures/bedrock/entity/maid_fairy/maid_fairy_17.png");
+
+    public static class FairyRenderState extends LivingEntityRenderState {
+        public int fairyTypeOrdinal;
+        public boolean onGround;
+        public String name = "";
+    }
+
+    private final NewEntityFairyRenderer newEntityFairyRenderer;
+    private final EntityBabyFairyRenderer babyFairyRenderer;
+
+    public EntityFairyRenderer(EntityRendererProvider.Context context) {
+        super(context, new SimpleBedrockModel<>(), 0.5f);
+        this.newEntityFairyRenderer = new NewEntityFairyRenderer(context);
+        this.babyFairyRenderer = new EntityBabyFairyRenderer(context);
+    }
+
+    @Override
+    public FairyRenderState createRenderState() {
+        return new FairyRenderState();
+    }
+
+    @Override
+    public void extractRenderState(EntityFairy entity, FairyRenderState state, float partialTicks) {
+        super.extractRenderState(entity, state, partialTicks);
+        state.fairyTypeOrdinal = entity.getFairyTypeOrdinal();
+        state.onGround = entity.onGround();
+        state.name = entity.getName().getString();
+    }
+
+    @Override
+    public void submit(FairyRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera) {
+        if (MiscConfig.USE_NEW_MAID_FAIRY_MODEL.get()) {
+            if (state.isBaby) {
+                babyFairyRenderer.submit(state, poseStack, submitNodeCollector, camera);
+            } else {
+                newEntityFairyRenderer.submit(state, poseStack, submitNodeCollector, camera);
+            }
+        } else {
+            SimpleBedrockModel<LivingEntityRenderState> model = BedrockModelLoader.getModel(BedrockModelLoader.MAID_FAIRY);
+            if (model != null) {
+                this.model = model;
+            }
+            super.submit(state, poseStack, submitNodeCollector, camera);
+        }
+    }
+
+    @Override
+    protected void setupRotations(FairyRenderState state, PoseStack poseStack, float bodyRot, float entityScale) {
+        super.setupRotations(state, poseStack, bodyRot, entityScale);
+        if (!state.onGround) {
+            poseStack.mulPose(Axis.XN.rotation(8 * (float) Math.PI / 180.0f));
+        }
+    }
+
+    @Override
+    public Identifier getTextureLocation(FairyRenderState state) {
+        if (MiscConfig.USE_NEW_MAID_FAIRY_MODEL.get()) {
+            return newEntityFairyRenderer.getTextureLocation(state);
+        }
+        return switch (state.fairyTypeOrdinal) {
+            case 1 -> TEXTURE_1;
+            case 2 -> TEXTURE_2;
+            case 3 -> TEXTURE_3;
+            case 4 -> TEXTURE_4;
+            case 5 -> TEXTURE_5;
+            case 6 -> TEXTURE_6;
+            case 7 -> TEXTURE_7;
+            case 8 -> TEXTURE_8;
+            case 9 -> TEXTURE_9;
+            case 10 -> TEXTURE_10;
+            case 11 -> TEXTURE_11;
+            case 12 -> TEXTURE_12;
+            case 13 -> TEXTURE_13;
+            case 14 -> TEXTURE_14;
+            case 15 -> TEXTURE_15;
+            case 16 -> TEXTURE_16;
+            case 17 -> TEXTURE_17;
+            default -> TEXTURE_0;
+        };
+    }
+}

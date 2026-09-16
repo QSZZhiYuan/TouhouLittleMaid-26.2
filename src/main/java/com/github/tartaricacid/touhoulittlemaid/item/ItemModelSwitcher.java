@@ -1,0 +1,89 @@
+package com.github.tartaricacid.touhoulittlemaid.item;
+
+import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
+import com.github.tartaricacid.touhoulittlemaid.init.InitBlocks;
+import com.github.tartaricacid.touhoulittlemaid.init.InitItems;
+import com.github.tartaricacid.touhoulittlemaid.tileentity.TileEntityModelSwitcher;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.ProblemReporter;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
+import net.minecraft.world.level.storage.TagValueInput;
+
+import javax.annotation.Nullable;
+import java.util.Objects;
+import java.util.function.Consumer;
+
+import static com.github.tartaricacid.touhoulittlemaid.init.InitDataComponent.STORAGE_DATA_TAG;
+
+public class ItemModelSwitcher extends BlockItem {
+    private static final String NEO_FORGE_DATA_TAG = "NeoForgeData";
+
+    public ItemModelSwitcher(Item.Properties properties) {
+        super(InitBlocks.MODEL_SWITCHER.get(), (properties).stacksTo(1));
+    }
+
+    public static ItemStack tileEntityToItemStack(HolderLookup.Provider provider, TileEntityModelSwitcher switcher) {
+        ItemStack itemStack = Objects.requireNonNull(InitItems.MODEL_SWITCHER.get().getDefaultInstance());
+        itemStack.set(STORAGE_DATA_TAG, switcher.saveWithoutMetadata(provider));
+        return itemStack;
+    }
+
+    public static void itemStackToTileEntity(HolderLookup.Provider provider, ItemStack stack, TileEntityModelSwitcher switcher) {
+        CompoundTag tag = stack.get(STORAGE_DATA_TAG);
+        if (tag != null && tag.contains(NEO_FORGE_DATA_TAG)) {
+            CompoundTag wrapperTag = new CompoundTag();
+            wrapperTag.put(NEO_FORGE_DATA_TAG, tag.getCompoundOrEmpty(NEO_FORGE_DATA_TAG));
+            switcher.loadAdditional(TagValueInput.create(ProblemReporter.DISCARDING, provider, wrapperTag));
+        }
+    }
+
+    @Override
+    public InteractionResult interactLivingEntity(ItemStack stack, Player pPlayer, LivingEntity pInteractionTarget, InteractionHand pUsedHand) {
+        if (pInteractionTarget instanceof EntityMaid maid) {
+            CompoundTag tag = stack.getOrDefault(STORAGE_DATA_TAG, new CompoundTag());
+            CompoundTag forgeData;
+            if (tag.contains(NEO_FORGE_DATA_TAG)) {
+                forgeData = tag.getCompoundOrEmpty(NEO_FORGE_DATA_TAG);
+            } else {
+                forgeData = new CompoundTag();
+            }
+            CompoundTag uuidTag = new CompoundTag();
+            uuidTag.putLong("most", maid.getUUID().getMostSignificantBits());
+            uuidTag.putLong("least", maid.getUUID().getLeastSignificantBits());
+            forgeData.put(TileEntityModelSwitcher.ENTITY_UUID, uuidTag);
+            tag.put(NEO_FORGE_DATA_TAG, forgeData);
+            stack.set(STORAGE_DATA_TAG, tag);
+            return InteractionResult.SUCCESS;
+        }
+        return super.interactLivingEntity(stack, pPlayer, pInteractionTarget, pUsedHand);
+    }
+
+    private boolean hasMaidInfo(ItemStack stack) {
+        CompoundTag tag = stack.get(STORAGE_DATA_TAG);
+        if (tag != null && tag.contains(NEO_FORGE_DATA_TAG)) {
+            CompoundTag forgeTag = tag.getCompoundOrEmpty(NEO_FORGE_DATA_TAG);
+            return forgeTag.contains(TileEntityModelSwitcher.ENTITY_UUID);
+        }
+        return false;
+    }
+
+    @Override
+    public void appendHoverText(ItemStack pStack, Item.TooltipContext pLevel, TooltipDisplay pTooltipDisplay, Consumer<Component> pTooltip, TooltipFlag pFlag) {
+        if (hasMaidInfo(pStack)) {
+            pTooltip.accept(Component.translatable("tooltips.touhou_little_maid.model_switcher.bounded").withStyle(ChatFormatting.GRAY));
+        } else {
+            pTooltip.accept(Component.translatable("gui.touhou_little_maid.model_switcher.uuid.empty").withStyle(ChatFormatting.DARK_RED));
+        }
+    }
+}
