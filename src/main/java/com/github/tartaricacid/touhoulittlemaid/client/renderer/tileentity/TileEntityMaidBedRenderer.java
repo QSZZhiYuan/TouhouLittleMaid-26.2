@@ -24,10 +24,10 @@ import net.minecraft.world.phys.AABB;
 import java.util.function.Function;
 
 public class TileEntityMaidBedRenderer implements BlockEntityRenderer<TileEntityMaidBed, MaidBlockEntityRenderState> {
-    private final Function<DyeColor, SimpleBedrockModel<?>> cacheModel = Util.memoize(color -> {
+    private final Function<DyeColor, SimpleBedrockModel<?>> currentModel = color -> {
         Identifier id = Identifier.fromNamespaceAndPath(TouhouLittleMaid.MOD_ID, "bedrock/block/maid_bed/" + color.getName());
         return BedrockModelLoader.getModel(id);
-    });
+    };
     private final Function<DyeColor, Identifier> cacheTexture = Util.memoize(color ->
             Identifier.fromNamespaceAndPath(TouhouLittleMaid.MOD_ID, "textures/bedrock/block/maid_bed/" + color.getName() + ".png"));
 
@@ -53,7 +53,10 @@ public class TileEntityMaidBedRenderer implements BlockEntityRenderer<TileEntity
         int packedLight = state.lightCoords;
         int packedOverlay = OverlayTexture.NO_OVERLAY;
         DyeColor dyeColor = bed.getColor();
-        SimpleBedrockModel<?> model = cacheModel.apply(dyeColor);
+        SimpleBedrockModel<?> model = currentModel.apply(dyeColor);
+        if (model == null) {
+            return;
+        }
         Identifier texture = cacheTexture.apply(dyeColor);
 
         poseStack.pushPose();

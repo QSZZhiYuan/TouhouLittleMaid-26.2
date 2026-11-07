@@ -154,9 +154,7 @@ public class TileEntityCChessRenderer implements BlockEntityRenderer<TileEntityC
     }
 
     private void renderChessboard(PoseStack poseStack, SubmitNodeCollector bufferIn, int combinedLightIn, int combinedOverlayIn, Direction facing) {
-        if (this.chessModel == null) {
-            this.chessModel = BedrockModelLoader.getModel(BedrockModelLoader.CCHESS);
-        }
+        this.chessModel = BedrockModelLoader.getModel(BedrockModelLoader.CCHESS);
         if (this.chessModel == null) {
             return;
         }

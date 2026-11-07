@@ -33,6 +33,7 @@ public class EntityChairRenderer extends LivingEntityRenderer<EntityChair, Entit
     private ChairModelInfo chairInfo;
     private List<Object> chairAnimations;
     private final GeckoEntityChairRenderer geckoEntityChairRenderer;
+    private final BedrockModel<LivingEntityRenderState> fallbackModel;
 
     public static class ChairRenderState extends LivingEntityRenderState {
         public EntityChair entity;
@@ -45,6 +46,7 @@ public class EntityChairRenderer extends LivingEntityRenderer<EntityChair, Entit
 
     public EntityChairRenderer(EntityRendererProvider.Context rendererManager) {
         super(rendererManager, new BedrockModel<>(), 0);
+        this.fallbackModel = this.model;
         this.geckoEntityChairRenderer = new GeckoEntityChairRenderer(rendererManager);
     }
 
@@ -60,9 +62,9 @@ public class EntityChairRenderer extends LivingEntityRenderer<EntityChair, Entit
         state.hitBox = chair.getBoundingBox().move(-chair.getX(), -chair.getY(), -chair.getZ());
 
         // 读取默认模型，用于清除不存在模型的缓存残留
-        CustomPackLoader.CHAIR_MODELS.getModel(DEFAULT_CHAIR_ID).ifPresent(model -> this.model = model);
-        CustomPackLoader.CHAIR_MODELS.getInfo(DEFAULT_CHAIR_ID).ifPresent(info -> this.chairInfo = info);
-        this.chairAnimations = null;
+        this.model = CustomPackLoader.CHAIR_MODELS.getModel(DEFAULT_CHAIR_ID).orElse(this.fallbackModel);
+        this.chairInfo = CustomPackLoader.CHAIR_MODELS.getInfo(DEFAULT_CHAIR_ID).orElse(null);
+        this.chairAnimations = CustomPackLoader.CHAIR_MODELS.getAnimation(DEFAULT_CHAIR_ID).orElse(null);
 
         // 通过模型 id 获取对应数据
         CustomPackLoader.CHAIR_MODELS.getModel(chair.getModelId()).ifPresent(model -> this.model = model);
@@ -112,15 +114,16 @@ public class EntityChairRenderer extends LivingEntityRenderer<EntityChair, Entit
         // 模型动画设置
         this.model.setAnimations(this.chairAnimations);
 
-        GlWrapper.setPoseStack(poseStack);
-        super.submit(state, poseStack, submitNodeCollector, camera);
+        GlWrapper.withPoseStack(poseStack, () -> super.submit(state, poseStack, submitNodeCollector, camera));
 
     }
 
     @Override
     protected void scale(ChairRenderState state, PoseStack poseStack) {
-        float scale = chairInfo.getRenderEntityScale();
-        poseStack.scale(scale, scale, scale);
+        if (state.chairInfo != null) {
+            float scale = state.chairInfo.getRenderEntityScale();
+            poseStack.scale(scale, scale, scale);
+        }
     }
 
     @Override

@@ -32,7 +32,8 @@
 
     "client.LanguageMixin",
     "client.LivingEntityRendererMixin",
-    "client.ModelMixin"
+    "client.ModelMixin",
+    "client.ModelFeatureRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 0

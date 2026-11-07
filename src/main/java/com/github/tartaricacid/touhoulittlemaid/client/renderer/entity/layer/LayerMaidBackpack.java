@@ -38,16 +38,21 @@ public class LayerMaidBackpack extends RenderLayer<MaidRenderState, BedrockModel
         if (!renderer.getMainInfo().isShowBackpack() || mob.isSleeping() || mob.isInvisible()) {
             return;
         }
-        // 稍微缩放，避免整数倍的 z-flight
-        poseStack.scale(1.01f, 1.01f, 1.01f);
-        // [-13, 41, 15]
-        if (getParentModel().hasBackpackPositioningModel()) {
-            BedrockPart renderer = getParentModel().getBackpackPositioningModel();
-            poseStack.translate(renderer.x * 0.0625, 0.0625 * (renderer.y - 23 + 8), 0.0625 * (renderer.z + 4));
-        } else {
-            poseStack.translate(0, -0.5, 0.25);
+        poseStack.pushPose();
+        try {
+            // 稍微缩放，避免整数倍的 z-flight
+            poseStack.scale(1.01f, 1.01f, 1.01f);
+            // [-13, 41, 15]
+            if (getParentModel().hasBackpackPositioningModel()) {
+                BedrockPart renderer = getParentModel().getBackpackPositioningModel();
+                poseStack.translate(renderer.x * 0.0625, 0.0625 * (renderer.y - 23 + 8), 0.0625 * (renderer.z + 4));
+            } else {
+                poseStack.translate(0, -0.5, 0.25);
+            }
+            IMaidBackpack type = maid.getConfigManager().isShowBackpack() ? maid.getMaidBackpackType() : BackpackManager.getEmptyBackpack();
+            BackpackClientHelper.findBackpackModel(type.getId()).ifPresent(pair -> renderColoredCutoutModel((Model<? super MaidRenderState>) pair.getLeft(), pair.getRight(), poseStack, bufferIn, packedLightIn, state, new Color(1.0f, 1.0f, 1.0f).getRGB(), 0));
+        } finally {
+            poseStack.popPose();
         }
-        IMaidBackpack type = maid.getConfigManager().isShowBackpack() ? maid.getMaidBackpackType() : BackpackManager.getEmptyBackpack();
-        BackpackClientHelper.findBackpackModel(type.getId()).ifPresent(pair -> renderColoredCutoutModel((Model<? super MaidRenderState>) pair.getLeft(), pair.getRight(), poseStack, bufferIn, packedLightIn, state, new Color(1.0f, 1.0f, 1.0f).getRGB(), 0));
     }
 }

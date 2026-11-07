@@ -28,9 +28,7 @@ public class TileEntityComputerRenderer extends TileEntityJoyRenderer<TileEntity
 
     @Override
     public void submit(MaidBlockEntityRenderState state, PoseStack poseStack, SubmitNodeCollector bufferIn, CameraRenderState camera) {
-        if (this.model == null) {
-            this.model = BedrockModelLoader.getModel(BedrockModelLoader.COMPUTER);
-        }
+        this.model = BedrockModelLoader.getModel(BedrockModelLoader.COMPUTER);
         if (this.model == null) {
             return;
         }

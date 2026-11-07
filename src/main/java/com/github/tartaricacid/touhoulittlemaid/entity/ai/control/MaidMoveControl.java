@@ -24,6 +24,14 @@ public class MaidMoveControl extends MoveControl {
 
     @Override
     public void tick() {
+        // A running path/strafe operation can survive the switch to a seated activity.
+        if (this.maid.isMaidInSittingPose()) {
+            this.operation = Operation.WAIT;
+            this.maid.setSpeed(0.0F);
+            this.maid.setZza(0.0F);
+            this.maid.setXxa(0.0F);
+            return;
+        }
         // 如何女仆想游泳了
         if (this.maid.getSwimManager().wantToSwim()) {
             if (this.maid.isUnderWater() && this.maid.getNavigation().isDone()) {

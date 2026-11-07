@@ -9,11 +9,9 @@ import net.minecraft.resources.Identifier;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import org.apache.commons.io.IOUtils;
-import org.openjdk.nashorn.api.scripting.NashornScriptEngineFactory;
 
 import javax.annotation.Nullable;
 import javax.script.Bindings;
-import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 import java.io.File;
 import java.io.FileInputStream;
@@ -28,7 +26,6 @@ import java.util.zip.ZipFile;
 
 @OnlyIn(Dist.CLIENT)
 public class CustomJsAnimationManger {
-    public static final ScriptEngine NASHORN = new NashornScriptEngineFactory().getScriptEngine();
     private static final Map<Identifier, Object> CUSTOM_ANIMATION_MAP = Maps.newHashMap();
 
     @Nullable
@@ -77,11 +74,11 @@ public class CustomJsAnimationManger {
             return null;
         }
         try (InputStream stream = new FileInputStream(file)) {
-            Bindings bindings = NASHORN.createBindings();
-            Object scriptObject = NASHORN.eval(IOUtils.toString(stream, StandardCharsets.UTF_8), bindings);
+            Bindings bindings = ScriptEngineHelper.getEngine().createBindings();
+            Object scriptObject = ScriptEngineHelper.runScript(IOUtils.toString(stream, StandardCharsets.UTF_8), bindings);
             CUSTOM_ANIMATION_MAP.put(Identifier, scriptObject);
             return scriptObject;
-        } catch (IOException | ScriptException e) {
+        } catch (IOException | ScriptException | RuntimeException e) {
             TouhouLittleMaid.LOGGER.error("Failed to load custom animation {}", Identifier, e);
         }
         return null;
@@ -103,11 +100,11 @@ public class CustomJsAnimationManger {
             return null;
         }
         try (InputStream stream = zipFile.getInputStream(entry)) {
-            Bindings bindings = NASHORN.createBindings();
-            Object scriptObject = NASHORN.eval(IOUtils.toString(stream, StandardCharsets.UTF_8), bindings);
+            Bindings bindings = ScriptEngineHelper.getEngine().createBindings();
+            Object scriptObject = ScriptEngineHelper.runScript(IOUtils.toString(stream, StandardCharsets.UTF_8), bindings);
             CUSTOM_ANIMATION_MAP.put(Identifier, scriptObject);
             return scriptObject;
-        } catch (IOException | ScriptException e) {
+        } catch (IOException | ScriptException | RuntimeException e) {
             TouhouLittleMaid.LOGGER.error("Failed to load custom animation {}", Identifier, e);
         }
         return null;

@@ -63,9 +63,7 @@ public class TileEntityGarageKitRenderer implements BlockEntityRenderer<TileEnti
         TileEntityGarageKit te = (TileEntityGarageKit) state.blockEntity;
         int combinedLightIn = state.lightCoords;
         int combinedOverlayIn = OverlayTexture.NO_OVERLAY;
-        if (this.BASE_MODEL == null) {
-            this.BASE_MODEL = BedrockModelLoader.getModel(STATUE_BASE);
-        }
+        this.BASE_MODEL = BedrockModelLoader.getModel(STATUE_BASE);
         if (this.BASE_MODEL != null) {
             poseStack.pushPose();
             poseStack.scale(0.5f, 0.5f, 0.5f);

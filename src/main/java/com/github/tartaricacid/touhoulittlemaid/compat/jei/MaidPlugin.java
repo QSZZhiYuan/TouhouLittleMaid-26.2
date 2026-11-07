@@ -52,13 +52,13 @@ public class MaidPlugin implements IModPlugin {
     public void registerRecipeTransferHandlers(IRecipeTransferRegistration registration) {
         registration.addRecipeTransferHandler(CraftingTableBackpackContainer.class, CraftingTableBackpackContainer.TYPE, RecipeTypes.CRAFTING, 62, 9, 0, 61);
         registration.addRecipeTransferHandler(FurnaceBackpackContainer.class, FurnaceBackpackContainer.TYPE, RecipeTypes.SMELTING, 61, 1, 0, 61);
-        registration.addRecipeTransferHandler(FurnaceBackpackContainer.class, FurnaceBackpackContainer.TYPE, RecipeTypes.FUELING, 62, 1, 0, 61);
+        registration.addRecipeTransferHandler(FurnaceBackpackContainer.class, FurnaceBackpackContainer.TYPE, RecipeTypes.SMELTING_FUEL, 62, 1, 0, 61);
     }
 
     @Override
     public void registerGuiHandlers(IGuiHandlerRegistration registration) {
         registration.addRecipeClickArea(CraftingTableBackpackContainerScreen.class, 213, 121, 13, 12, RecipeTypes.CRAFTING);
-        registration.addRecipeClickArea(FurnaceBackpackContainerScreen.class, 183, 118, 28, 24, RecipeTypes.SMELTING, RecipeTypes.FUELING);
+        registration.addRecipeClickArea(FurnaceBackpackContainerScreen.class, 183, 118, 28, 24, RecipeTypes.SMELTING, RecipeTypes.SMELTING_FUEL);
         registerTaskListArea(registration);
     }
 

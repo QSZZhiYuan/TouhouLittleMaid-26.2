@@ -26,42 +26,43 @@ public class BackpackClientHelper {
     private static final Identifier FURNACE_ID = Identifier.fromNamespaceAndPath(TouhouLittleMaid.MOD_ID, "furnace_backpack");
     private static final Identifier TANK_ID = Identifier.fromNamespaceAndPath(TouhouLittleMaid.MOD_ID, "tank");
 
-    private static Map<Identifier, Pair<EntityModel<?>, Identifier>> BACKPACK_MODEL_MAP;
+    private static Map<Identifier, Pair<Identifier, Identifier>> BACKPACK_MODEL_MAP;
 
     public static void init(EntityModelSet modelSet) {
         BACKPACK_MODEL_MAP = new java.util.HashMap<>();
-        put(SMALL_ID, BedrockModelLoader.getModel(SMALL_BACKPACK), "textures/bedrock/entity/backpack/small_backpack.png");
-        put(MIDDLE_ID, BedrockModelLoader.getModel(MIDDLE_BACKPACK), "textures/bedrock/entity/backpack/middle_backpack.png");
-        put(BIG_ID, BedrockModelLoader.getModel(BIG_BACKPACK), "textures/bedrock/entity/backpack/big_backpack.png");
-        put(CRAFTING_TABLE_ID, BedrockModelLoader.getModel(CRAFTING_TABLE_BACKPACK), "textures/bedrock/entity/backpack/crafting_table_backpack.png");
-        put(ENDER_CHEST_ID, BedrockModelLoader.getModel(END_CHEST_BACKPACK), "textures/bedrock/entity/backpack/ender_chest_backpack.png");
-        put(FURNACE_ID, BedrockModelLoader.getModel(FURNACE_BACKPACK), "textures/bedrock/entity/backpack/furnace_backpack.png");
-        put(TANK_ID, BedrockModelLoader.getModel(TANK_BACKPACK), "textures/bedrock/entity/backpack/tank_backpack.png");
+        put(SMALL_ID, SMALL_BACKPACK, "textures/bedrock/entity/backpack/small_backpack.png");
+        put(MIDDLE_ID, MIDDLE_BACKPACK, "textures/bedrock/entity/backpack/middle_backpack.png");
+        put(BIG_ID, BIG_BACKPACK, "textures/bedrock/entity/backpack/big_backpack.png");
+        put(CRAFTING_TABLE_ID, CRAFTING_TABLE_BACKPACK, "textures/bedrock/entity/backpack/crafting_table_backpack.png");
+        put(ENDER_CHEST_ID, END_CHEST_BACKPACK, "textures/bedrock/entity/backpack/ender_chest_backpack.png");
+        put(FURNACE_ID, FURNACE_BACKPACK, "textures/bedrock/entity/backpack/furnace_backpack.png");
+        put(TANK_ID, TANK_BACKPACK, "textures/bedrock/entity/backpack/tank_backpack.png");
         BACKPACK_MODEL_MAP = java.util.Collections.unmodifiableMap(BACKPACK_MODEL_MAP);
     }
 
-    private static void put(Identifier id, EntityModel<?> model, String texturePath) {
+    private static void put(Identifier id, Identifier model, String texturePath) {
         BACKPACK_MODEL_MAP.put(id, Pair.of(model, Identifier.fromNamespaceAndPath(TouhouLittleMaid.MOD_ID, texturePath)));
     }
 
     @Nullable
     public static EntityModel<?> getBackpackModel(Identifier id) {
-        Pair<EntityModel<?>, Identifier> pair = BACKPACK_MODEL_MAP == null ? null : BACKPACK_MODEL_MAP.get(id);
-        return pair == null ? null : pair.getLeft();
+        Pair<Identifier, Identifier> pair = BACKPACK_MODEL_MAP == null ? null : BACKPACK_MODEL_MAP.get(id);
+        return pair == null ? null : BedrockModelLoader.getModel(pair.getLeft());
     }
 
     @Nullable
     public static Identifier getBackpackTexture(Identifier id) {
-        Pair<EntityModel<?>, Identifier> pair = BACKPACK_MODEL_MAP == null ? null : BACKPACK_MODEL_MAP.get(id);
+        Pair<Identifier, Identifier> pair = BACKPACK_MODEL_MAP == null ? null : BACKPACK_MODEL_MAP.get(id);
         return pair == null ? null : pair.getRight();
     }
 
     public static Optional<Pair<EntityModel<?>, Identifier>> findBackpackModel(Identifier id) {
-        Pair<EntityModel<?>, Identifier> pair = BACKPACK_MODEL_MAP == null ? null : BACKPACK_MODEL_MAP.get(id);
-        if (pair == null || pair.getLeft() == null) {
+        EntityModel<?> model = getBackpackModel(id);
+        Identifier texture = getBackpackTexture(id);
+        if (model == null || texture == null) {
             return Optional.empty();
         }
-        return Optional.of(pair);
+        return Optional.of(Pair.of(model, texture));
     }
 
     public static void offsetBackpackItem(Identifier id, PoseStack poseStack) {

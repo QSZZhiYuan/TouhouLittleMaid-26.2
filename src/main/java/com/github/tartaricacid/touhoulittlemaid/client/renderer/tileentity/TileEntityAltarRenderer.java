@@ -49,9 +49,8 @@ public class TileEntityAltarRenderer implements BlockEntityRenderer<TileEntityAl
         int combinedLightIn = state.lightCoords;
         int combinedOverlayIn = OverlayTexture.NO_OVERLAY;
         if (te.isRender()) {
-            if (this.model == null) {
-                this.model = BedrockModelLoader.getModel(BedrockModelLoader.ALTAR);
-            }
+            // The registry replaces model instances after a resource reload.
+            this.model = BedrockModelLoader.getModel(BedrockModelLoader.ALTAR);
             if (this.model != null) {
                 poseStack.pushPose();
                 this.setTranslateAndPose(te, poseStack);

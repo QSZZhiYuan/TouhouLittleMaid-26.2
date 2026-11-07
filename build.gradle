@@ -30,6 +30,13 @@ base {
 
 // 需要的前置库
 repositories {
+    maven {
+        url = 'https://maven.blamejared.com'
+        content {
+            includeGroup 'mezz.jei'
+            includeGroup 'vazkii.patchouli'
+        }
+    }
     // ./libs 目录为库
     flatDir {
         dir "libs"
@@ -202,11 +209,9 @@ sourceSets.main {
         exclude 'com/github/tartaricacid/touhoulittlemaid/compat/gun/**'
         exclude 'com/github/tartaricacid/touhoulittlemaid/compat/immersivemelodies/**'
         exclude 'com/github/tartaricacid/touhoulittlemaid/compat/jade/**'
-        exclude 'com/github/tartaricacid/touhoulittlemaid/compat/jei/**'
         exclude 'com/github/tartaricacid/touhoulittlemaid/compat/jmc/**'
         exclude 'com/github/tartaricacid/touhoulittlemaid/compat/kaleidoscope/**'
         exclude 'com/github/tartaricacid/touhoulittlemaid/compat/kubejs/**'
-        exclude 'com/github/tartaricacid/touhoulittlemaid/compat/patchouli/**'
         exclude 'com/github/tartaricacid/touhoulittlemaid/compat/ponder/**'
         exclude 'com/github/tartaricacid/touhoulittlemaid/compat/rei/**'
         exclude 'com/github/tartaricacid/touhoulittlemaid/compat/simplehats/**'
@@ -225,6 +230,33 @@ sourceSets.main {
         exclude 'com/github/tartaricacid/touhoulittlemaid/datagen/GlobalLootModifier.java'
     }
 }
+
+// Run the client math, NBT and script security checks in a standalone JVM.
+sourceSets {
+    regressionTest {
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath + sourceSets.main.compileClasspath
+    }
+}
+
+tasks.register('regressionTest', JavaExec) {
+    group = 'verification'
+    description = 'Runs animation isolation, script security, maid save-format and item-use regressions.'
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+    workingDir = layout.buildDirectory.dir('regression-test-run').get().asFile
+    doFirst { getWorkingDir().mkdirs() }
+    classpath = sourceSets.regressionTest.runtimeClasspath
+    mainClass = 'org.junit.runner.JUnitCore'
+    args 'com.github.tartaricacid.touhoulittlemaid.client.animation.ScriptEngineHelperTest',
+            'com.github.tartaricacid.touhoulittlemaid.client.animation.GlWrapperTest',
+            'com.github.tartaricacid.touhoulittlemaid.client.animation.BedrockPartTest',
+            'com.github.tartaricacid.touhoulittlemaid.entity.MaidDataStorageTest',
+            'com.github.tartaricacid.touhoulittlemaid.entity.MaidItemUseTimeTest'
+}
+
+tasks.named('check') { dependsOn 'regressionTest' }
 
 configurations {
     runtimeClasspath.extendsFrom localRuntime
@@ -251,10 +283,9 @@ dependencies {
     jarJar "org.yaml:snakeyaml:2.4"
 
     // 单元测试
-    testImplementation 'junit:junit:4.13.2'
+    regressionTestImplementation 'junit:junit:4.13.2'
 
-    // GeckoLib
-    implementation "software.bernie.geckolib:geckolib-neoforge-1.21.1:4.7.5"
+    // The renderer uses the geckolib3 implementation embedded in this project.
 
     // Curios
     compileOnly "top.theillusivec4.curios:curios-neoforge:9.2.0+1.21.1"
@@ -267,7 +298,8 @@ dependencies {
     compileOnly "maven.modrinth:cloth-config:15.0.140+neoforge"
 
     // JEI
-    compileOnly "maven.modrinth:jei:19.21.0.247-neoforge"
+    compileOnly "mezz.jei:jei-26.2-neoforge:30.11.0.66"
+    localRuntime "mezz.jei:jei-26.2-neoforge:30.11.0.66"
 
     // REI
     compileOnly "maven.modrinth:architectury-api:13.0.8+neoforge"
@@ -283,7 +315,8 @@ dependencies {
     compileOnly "maven.modrinth:the-one-probe:1.21_neo-12.0.6"
 
     // Patchouli
-    compileOnly "maven.modrinth:patchouli:1.21-88-neoforge"
+    // Optional API only. A compatible NeoForge Patchouli runtime must be installed separately.
+    compileOnly("vazkii.patchouli:patchouli-neoforge:26.1-94:api") { transitive = false }
 
     // Sodium/Iris/Embeddium
     compileOnly "maven.modrinth:sodium:mc1.21.1-0.6.13-neoforge"

@@ -60,6 +60,8 @@ import com.github.tartaricacid.touhoulittlemaid.network.message.PlayMaidSoundPac
 import com.github.tartaricacid.touhoulittlemaid.network.message.SendEffectPackage;
 import com.github.tartaricacid.touhoulittlemaid.network.message.SyncYsmMaidDataPackage;
 import com.github.tartaricacid.touhoulittlemaid.util.ItemsUtil;
+import com.github.tartaricacid.touhoulittlemaid.util.MaidDataStorage;
+import com.github.tartaricacid.touhoulittlemaid.util.MaidItemUseTime;
 import com.github.tartaricacid.touhoulittlemaid.util.ParseI18n;
 import com.github.tartaricacid.touhoulittlemaid.util.TeleportHelper;
 import com.github.tartaricacid.touhoulittlemaid.world.backups.MaidBackupsManager;
@@ -70,6 +72,7 @@ import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
 import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
@@ -202,6 +205,7 @@ public class EntityMaid extends TamableAnimal implements CrossbowAttackMob, IMai
     public static final String MAID_INVENTORY_TAG = "MaidInventory";
     public static final String MAID_BAUBLE_INVENTORY_TAG = "MaidBaubleInventory";
     public static final String MAID_HIDE_INVENTORY_TAG = "MaidHideInventory";
+    private static final String TEMPORARY_USE_HAND_TAG = "MaidTemporaryUseHand";
     public static final String MAID_TASK_INVENTORY_TAG = "MaidTaskInventory";
     public static final String EXPERIENCE_TAG = "MaidExperience";
 
@@ -285,6 +289,7 @@ public class EntityMaid extends TamableAnimal implements CrossbowAttackMob, IMai
     private final BaubleItemHandler maidBauble = new BaubleItemHandler(BAUBLE_INV_SIZE);
     // 用于暂存副手物品的物品栏
     private final ItemStackHandler hideInv = new ItemStackHandler(1);
+    private @Nullable InteractionHand temporaryUseHand;
     // 用于工作任务可能需要的物品�?
     private final ItemStackHandler taskInv = new ItemStackHandler(9);
 
@@ -1400,6 +1405,9 @@ public class EntityMaid extends TamableAnimal implements CrossbowAttackMob, IMai
         compound.put(MAID_INVENTORY_TAG, serializeItemStackHandler(maidInv));
         compound.put(MAID_BAUBLE_INVENTORY_TAG, serializeItemStackHandler(maidBauble));
         compound.put(MAID_HIDE_INVENTORY_TAG, serializeItemStackHandler(hideInv));
+        if (this.temporaryUseHand != null) {
+            compound.putString(TEMPORARY_USE_HAND_TAG, this.temporaryUseHand.name());
+        }
         compound.put(MAID_TASK_INVENTORY_TAG, serializeItemStackHandler(taskInv));
         compound.putBoolean(STRUCK_BY_LIGHTNING_TAG, isStruckByLightning());
         compound.putBoolean(INVULNERABLE_TAG, getIsInvulnerable());
@@ -1423,13 +1431,13 @@ public class EntityMaid extends TamableAnimal implements CrossbowAttackMob, IMai
         this.taskDataMaps.writeSaveData(compound);
         this.killRecordManager.addAdditionalSaveData(compound);
         this.aiChatManager.writeToTag(compound);
-        output.store("maid_data", CompoundTag.CODEC, compound);
+        output.store(compound);
     }
 
     @Override
     public void readAdditionalSaveData(ValueInput input) {
         super.readAdditionalSaveData(input);
-        CompoundTag compound = input.read("maid_data", CompoundTag.CODEC).orElse(new CompoundTag());
+        CompoundTag compound = MaidDataStorage.read(input);
         this.taskDataMaps.readSaveData(compound);
         this.setSyncTaskData(this.taskDataMaps.getUpdateTag());
         if (compound.contains(MODEL_ID_TAG_NAME)) {
@@ -1541,6 +1549,18 @@ public class EntityMaid extends TamableAnimal implements CrossbowAttackMob, IMai
         this.setBackpackShowItem(maidInv.getStackInSlot(MaidBackpackHandler.BACKPACK_ITEM_SLOT));
         this.killRecordManager.readAdditionalSaveData(compound);
         this.aiChatManager.readFromTag(compound);
+        // Active item use is not saved by vanilla. Recover an interrupted meal after loading a soul slab/world.
+        this.temporaryUseHand = null;
+        if (compound.contains(TEMPORARY_USE_HAND_TAG)) {
+            this.temporaryUseHand = "MAIN_HAND".equals(compound.getStringOr(TEMPORARY_USE_HAND_TAG, ""))
+                    ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
+        } else if (!this.hideInv.getStackInSlot(0).isEmpty()) {
+            // Older saves always restored the hidden item to the offhand.
+            this.temporaryUseHand = InteractionHand.OFF_HAND;
+        }
+        if (!this.level().isClientSide()) {
+            this.backCurrentHandItemStack();
+        }
     }
 
     public boolean openMaidGui(Player player) {
@@ -1651,10 +1671,19 @@ public class EntityMaid extends TamableAnimal implements CrossbowAttackMob, IMai
     }
 
     @Override
-    protected void completeUsingItem() {
+    public void stopUsingItem() {
+        super.stopUsingItem();
         this.getSwimManager().resetEatBreatheItem();
-        super.completeUsingItem();
-        this.backCurrentHandItemStack();
+        if (!this.level().isClientSide()) {
+            this.backCurrentHandItemStack();
+        }
+    }
+
+    @Override
+    public void handleExtraItemsCreatedOnUse(ItemStack extraCreatedRemainder) {
+        if (!this.level().isClientSide()) {
+            this.storeItemAfterUse(extraCreatedRemainder);
+        }
     }
 
     /**
@@ -1664,6 +1693,10 @@ public class EntityMaid extends TamableAnimal implements CrossbowAttackMob, IMai
      * @param itemStack 当前手上的物品（必须是能使用--需要持续使用的物品）
      */
     public void memoryHandItemStack(ItemStack itemStack) {
+        this.memoryHandItemStack(itemStack, InteractionHand.OFF_HAND);
+    }
+
+    public void memoryHandItemStack(ItemStack itemStack, InteractionHand hand) {
         // 先检查内部存储是否已经有物品了，有就掉落
         ItemStack hideItemStack = this.getHideInv().getStackInSlot(0);
         if (!hideItemStack.isEmpty()) {
@@ -1675,24 +1708,28 @@ public class EntityMaid extends TamableAnimal implements CrossbowAttackMob, IMai
         }
         // 然后存入我们的物�?
         ItemHandlerHelper.insertItemStacked(this.getHideInv(), itemStack, false);
+        this.temporaryUseHand = hand;
     }
 
     /**
      * 将之前临时存在背包里的物品再次放在对应的手上
      */
     private void backCurrentHandItemStack() {
-        // 先看看副手是否为空？
-        ItemStack offhandItem = this.getItemInHand(InteractionHand.OFF_HAND);
-        if (!offhandItem.isEmpty()) {
-            ItemStack stack = ItemHandlerHelper.insertItemStacked(this.getAvailableBackpackInv(), offhandItem.copy(), false);
-            if (!stack.isEmpty()) {
-                ItemEntity itemEntity = new ItemEntity(this.level(), this.getX(), this.getY() + 0.5, this.getZ(), stack);
-                this.level().addFreshEntity(itemEntity);
-            }
+        InteractionHand hand = this.temporaryUseHand;
+        if (hand == null) {
+            return;
         }
-        // 副手此时为空，那么插入我们的物品
+        this.temporaryUseHand = null;
+        this.storeItemAfterUse(this.getItemInHand(hand));
         ItemStack output = this.getHideInv().extractItem(0, this.getHideInv().getStackInSlot(0).getCount(), false);
-        this.setItemInHand(InteractionHand.OFF_HAND, output);
+        this.setItemInHand(hand, output);
+    }
+
+    private void storeItemAfterUse(ItemStack itemStack) {
+        ItemStack remainder = ItemHandlerHelper.insertItemStacked(this.getAvailableBackpackInv(), itemStack.copy(), false);
+        if (!remainder.isEmpty()) {
+            this.level().addFreshEntity(new ItemEntity(this.level(), this.getX(), this.getY() + 0.5, this.getZ(), remainder));
+        }
     }
 
     public ItemStack eat(Level level, ItemStack food) {
@@ -1987,7 +2024,7 @@ public class EntityMaid extends TamableAnimal implements CrossbowAttackMob, IMai
         if (this.isUsingItem()) {
             ItemStack currentItem = this.getUseItem();
             // 如果正在使用物品但该物品无法继续使用（例如食物已被移除），则强制停止使用
-            if (currentItem.isEmpty() || currentItem.getUseDuration(this) <= 0) {
+            if (currentItem.isEmpty() || (currentItem.getUseDuration(this) <= 0 && !currentItem.has(DataComponents.CONSUMABLE))) {
                 this.stopUsingItem();
                 return;
             }
@@ -1998,7 +2035,7 @@ public class EntityMaid extends TamableAnimal implements CrossbowAttackMob, IMai
             if (attribute != null) {
                 // MAID_USE_ITEM_SPEED 默认是 1
                 // 故这里减去属性值再�?1，保证属性值为 1 时行为和原版一�?
-                this.useItemRemaining = this.useItemRemaining - (int) attribute.getValue() + 1;
+                this.useItemRemaining = MaidItemUseTime.beforeVanillaTick(this.useItemRemaining, attribute.getValue());
             }
         }
         super.updateUsingItem(usingItem);
@@ -2417,6 +2454,11 @@ public class EntityMaid extends TamableAnimal implements CrossbowAttackMob, IMai
     public void setInSittingPose(boolean inSittingPose) {
         super.setInSittingPose(inSittingPose);
         setOrderedToSit(inSittingPose);
+        if (inSittingPose && level instanceof ServerLevel) {
+            this.getNavigation().stop();
+            this.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
+            this.getBrain().eraseMemory(MemoryModuleType.PATH);
+        }
     }
 
     public MaidGameRecordManager getGameRecordManager() {

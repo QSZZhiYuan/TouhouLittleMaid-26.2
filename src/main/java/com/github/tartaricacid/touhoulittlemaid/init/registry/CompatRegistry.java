@@ -2,7 +2,7 @@ package com.github.tartaricacid.touhoulittlemaid.init.registry;
 
 import com.github.tartaricacid.touhoulittlemaid.compat.stub.CuriosCompat;
 import com.github.tartaricacid.touhoulittlemaid.compat.stub.ImmersiveMelodiesServerCompat;
-import com.github.tartaricacid.touhoulittlemaid.compat.stub.PatchouliCompat;
+import com.github.tartaricacid.touhoulittlemaid.compat.patchouli.PatchouliCompat;
 import com.github.tartaricacid.touhoulittlemaid.compat.sbackpack.SBackpackCompat;
 import com.github.tartaricacid.touhoulittlemaid.compat.stub.TBackpackCompat;
 import com.github.tartaricacid.touhoulittlemaid.compat.top.TheOneProbeInfo;

@@ -6,6 +6,7 @@ import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.github.tartaricacid.touhoulittlemaid.init.InitDataComponent;
 import com.github.tartaricacid.touhoulittlemaid.inventory.tooltip.ItemMaidTooltip;
 import com.github.tartaricacid.touhoulittlemaid.inventory.tooltip.YsmMaidInfo;
+import com.github.tartaricacid.touhoulittlemaid.util.MaidDataStorage;
 import com.mojang.serialization.Codec;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
@@ -82,12 +83,13 @@ public abstract class AbstractStoreMaidItem extends Item {
         if (maidInfo == null) {
             return Optional.empty();
         }
-        Optional<String> modelId = maidInfo.copyTag().read(Codec.STRING.fieldOf(MODEL_ID_TAG_NAME));
+        CompoundTag data = MaidDataStorage.read(maidInfo.copyTag());
+        Optional<String> modelId = data.read(Codec.STRING.fieldOf(MODEL_ID_TAG_NAME));
         if (modelId.isEmpty()) {
             return Optional.empty();
         }
         String customName = maidInfo.copyTag().read(Codec.STRING.fieldOf(CUSTOM_NAME)).orElse(StringUtils.EMPTY);
-        YsmMaidInfo ysmMaidInfo = YsmCompat.getYsmMaidInfo(maidInfo.copyTag());
+        YsmMaidInfo ysmMaidInfo = YsmCompat.getYsmMaidInfo(data);
         return Optional.of(new ItemMaidTooltip(modelId.get(), customName, ysmMaidInfo));
     }
 

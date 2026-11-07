@@ -318,8 +318,8 @@ public abstract class GeoReplacedEntityRenderer<T extends LivingEntity, E extend
 
         poseStack.pushPose();
         poseStack.translate(xAngleOffset, leashOffset.y, zAngleOffset);
-        Matrix4f posMatrix = poseStack.last().pose();
         bufferSource.submitCustomGeometry(poseStack, RenderTypes.leash(), (pose, vertexConsumer) -> {
+            Matrix4f posMatrix = pose.pose();
             for (int segment = 0; segment <= 24; ++segment) {
                 renderLeashPiece(vertexConsumer, posMatrix, xDif, yDif, zDif, entityBlockLight, holderBlockLight,
                         entitySkyLight, holderSkyLight, 0.025f, 0.025f, xOffset, zOffset, segment, false);

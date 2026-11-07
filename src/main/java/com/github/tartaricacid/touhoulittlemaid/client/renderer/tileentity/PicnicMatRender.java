@@ -53,9 +53,7 @@ public class PicnicMatRender implements BlockEntityRenderer<TileEntityPicnicMat,
         int combinedLightIn = state.lightCoords;
         int combinedOverlayIn = OverlayTexture.NO_OVERLAY;
         BlockState blockState = picnicMat.getBlockState();
-        if (this.model == null) {
-            this.model = BedrockModelLoader.getModel(BedrockModelLoader.PICNIC_MAT);
-        }
+        this.model = BedrockModelLoader.getModel(BedrockModelLoader.PICNIC_MAT);
         if (blockState.getValue(BlockPicnicMat.PART).isCenter() && this.model != null) {
             Direction facing = blockState.getValue(BlockPicnicMat.FACING);
             poseStack.pushPose();

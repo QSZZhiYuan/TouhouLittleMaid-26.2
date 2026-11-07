@@ -41,6 +41,21 @@ public class AnimatedGeoBone implements IBone {
         return geoBone;
     }
 
+    private AnimatedGeoBone(AnimatedGeoBone source) {
+        this.geoBone = source.geoBone;
+        this.children = source.children.stream().map(AnimatedGeoBone::new).toList();
+        this.isHidden = source.isHidden;
+        this.areCubesHidden = source.areCubesHidden;
+        this.hideChildBonesToo = source.hideChildBonesToo;
+        this.scale.set(source.scale);
+        this.position.set(source.position);
+        this.rotation.set(source.rotation);
+    }
+
+    public AnimatedGeoBone copyForRender() {
+        return new AnimatedGeoBone(this);
+    }
+
     public List<AnimatedGeoBone> children() {
         return children;
     }

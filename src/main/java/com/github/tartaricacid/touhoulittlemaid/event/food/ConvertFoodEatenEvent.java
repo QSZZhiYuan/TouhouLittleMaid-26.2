@@ -15,6 +15,9 @@ import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
 public class ConvertFoodEatenEvent {
     @SubscribeEvent
     public static void onAfterMaidEat(MaidAfterEatEvent event) {
+        if (event.isUseRemainderHandled()) {
+            return;
+        }
         ItemStack foodAfterEat = event.getFoodAfterEat();
         EntityMaid maid = event.getMaid();
         if (!foodAfterEat.isEmpty()) {
@@ -26,7 +29,7 @@ public class ConvertFoodEatenEvent {
                     ItemStack result = ItemHandlerHelper.insertItemStacked(availableInv, convertedStack, false);
                     // 如果女仆背包满了，掉落在地上
                     if (!result.isEmpty()) {
-                        ItemEntity itemEntity = new ItemEntity(maid.level, maid.getX(), maid.getY(), maid.getZ(), convertedStack);
+                        ItemEntity itemEntity = new ItemEntity(maid.level, maid.getX(), maid.getY(), maid.getZ(), result);
                         maid.level.addFreshEntity(itemEntity);
                     }
                 }

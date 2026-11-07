@@ -29,7 +29,7 @@ public class MaidHealSelfTask extends MaidCheckRateTask {
     protected boolean checkExtraStartConditions(ServerLevel serverLevel, EntityMaid maid) {
         if (super.checkExtraStartConditions(serverLevel, maid)) {
             float missingHealth = maid.getMaxHealth() - maid.getHealth();
-            return !maid.isSleeping() && maid.getTask().enableEating(maid) && missingHealth >= MAX_CHECK_MISSING_HEATH;
+            return !maid.isUsingItem() && !maid.isSleeping() && maid.getTask().enableEating(maid) && missingHealth >= MAX_CHECK_MISSING_HEATH;
         }
         return false;
     }
@@ -83,7 +83,7 @@ public class MaidHealSelfTask extends MaidCheckRateTask {
                     ItemStack handStack = itemInHand.copy();
                     maid.setItemInHand(eanHand, foodStack);
                     itemInHand = maid.getItemInHand(eanHand);
-                    maid.memoryHandItemStack(handStack);
+                    maid.memoryHandItemStack(handStack, eanHand);
                     hasFood = true;
                     break swapItemCheck;
                 }

@@ -18,8 +18,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
 
-import java.util.Collections;
 import java.util.List;
 
 public class AltarRecipeCategory implements IRecipeCategory<AltarRecipeWrapper> {
@@ -41,7 +41,7 @@ public class AltarRecipeCategory implements IRecipeCategory<AltarRecipeWrapper> 
 
     @Override
     public void draw(AltarRecipeWrapper recipe, IRecipeSlotsView recipeSlotsView, GuiGraphicsExtractor graphics, double mouseX, double mouseY) {
-        int darkGray = 0x555555;
+        int darkGray = 0xFF555555;
         Font font = Minecraft.getInstance().font;
         String result = I18n.get("jei.touhou_little_maid.altar_craft.result", I18n.get(recipe.getLangKey()));
 
@@ -50,28 +50,20 @@ public class AltarRecipeCategory implements IRecipeCategory<AltarRecipeWrapper> 
         powerDraw.draw(graphics, 90, 50);
         graphics.pose().popMatrix();
 
-        graphics.drawString(font, String.format("×%.2f", recipe.getPowerCost()), 65, 55, darkGray, false);
-        graphics.drawString(font, result, (int) ((bgDraw.getWidth() - font.width(result)) / 2.0f), 85, darkGray, false);
+        graphics.text(font, String.format("×%.2f", recipe.getPowerCost()), 65, 55, darkGray, false);
+        graphics.text(font, result, (int) ((bgDraw.getWidth() - font.width(result)) / 2.0f), 85, darkGray, false);
     }
 
     @Override
     public void setRecipe(IRecipeLayoutBuilder builder, AltarRecipeWrapper recipe, IFocusGroup focuses) {
-        List<List<ItemStack>> inputs = recipe.getInputs();
+        List<Ingredient> inputs = recipe.getInputs();
         ItemStack output = recipe.getOutput();
-        builder.addSlot(RecipeIngredientRole.INPUT, 40, 35).addItemStacks(getInput(inputs, 0)).setBackground(slotDraw, -1, -1);
-        builder.addSlot(RecipeIngredientRole.INPUT, 40, 55).addItemStacks(getInput(inputs, 1)).setBackground(slotDraw, -1, -1);
-        builder.addSlot(RecipeIngredientRole.INPUT, 60, 15).addItemStacks(getInput(inputs, 2)).setBackground(slotDraw, -1, -1);
-        builder.addSlot(RecipeIngredientRole.INPUT, 80, 15).addItemStacks(getInput(inputs, 3)).setBackground(slotDraw, -1, -1);
-        builder.addSlot(RecipeIngredientRole.INPUT, 100, 35).addItemStacks(getInput(inputs, 4)).setBackground(slotDraw, -1, -1);
-        builder.addSlot(RecipeIngredientRole.INPUT, 100, 55).addItemStacks(getInput(inputs, 5)).setBackground(slotDraw, -1, -1);
-        builder.addSlot(RecipeIngredientRole.OUTPUT, 140, 5).addItemStack(output).setBackground(slotDraw, -1, -1);
-    }
-
-    private List<ItemStack> getInput(List<List<ItemStack>> inputs, int index) {
-        if (index < inputs.size()) {
-            return inputs.get(index);
+        int[][] positions = {{40, 35}, {40, 55}, {60, 15}, {80, 15}, {100, 35}, {100, 55}};
+        for (int i = 0; i < inputs.size() && i < positions.length; i++) {
+            builder.addSlot(RecipeIngredientRole.INPUT, positions[i][0], positions[i][1])
+                    .add(inputs.get(i)).setBackground(slotDraw, -1, -1);
         }
-        return Collections.singletonList(ItemStack.EMPTY);
+        builder.addSlot(RecipeIngredientRole.OUTPUT, 140, 5).addItemStack(output).setBackground(slotDraw, -1, -1);
     }
 
     @Override
@@ -85,9 +77,13 @@ public class AltarRecipeCategory implements IRecipeCategory<AltarRecipeWrapper> 
     }
 
     @Override
-    @SuppressWarnings("removal")
-    public IDrawable getBackground() {
-        return bgDraw;
+    public int getWidth() {
+        return bgDraw.getWidth();
+    }
+
+    @Override
+    public int getHeight() {
+        return bgDraw.getHeight();
     }
 
     @Override

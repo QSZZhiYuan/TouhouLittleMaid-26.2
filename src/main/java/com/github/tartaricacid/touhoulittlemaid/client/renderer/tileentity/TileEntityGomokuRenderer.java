@@ -81,9 +81,7 @@ public class TileEntityGomokuRenderer implements BlockEntityRenderer<TileEntityG
     }
 
     private void renderChessboard(TileEntityGomoku gomoku, PoseStack poseStack, SubmitNodeCollector bufferIn, int combinedLightIn, int combinedOverlayIn) {
-        if (this.CHECKER_BOARD_MODEL == null) {
-            this.CHECKER_BOARD_MODEL = BedrockModelLoader.getModel(BedrockModelLoader.GOMOKU);
-        }
+        this.CHECKER_BOARD_MODEL = BedrockModelLoader.getModel(BedrockModelLoader.GOMOKU);
         if (this.CHECKER_BOARD_MODEL == null) {
             return;
         }
@@ -100,9 +98,7 @@ public class TileEntityGomokuRenderer implements BlockEntityRenderer<TileEntityG
     }
 
     private void renderPiece(TileEntityGomoku gomoku, PoseStack poseStack, SubmitNodeCollector bufferIn, int combinedLightIn, int combinedOverlayIn, CameraRenderState camera) {
-        if (this.PIECE_MODEL == null) {
-            this.PIECE_MODEL = BedrockModelLoader.getModel(BedrockModelLoader.GOMOKU_PIECE);
-        }
+        this.PIECE_MODEL = BedrockModelLoader.getModel(BedrockModelLoader.GOMOKU_PIECE);
         if (this.PIECE_MODEL == null) {
             return;
         }

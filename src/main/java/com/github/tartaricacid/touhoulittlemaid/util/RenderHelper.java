@@ -1,5 +1,7 @@
 package com.github.tartaricacid.touhoulittlemaid.util;
 
+import com.github.tartaricacid.simplebedrockmodel.client.bedrock.BedrockModelProvider;
+import com.github.tartaricacid.simplebedrockmodel.client.bedrock.model.BedrockPart;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Camera;
@@ -18,6 +20,23 @@ import org.joml.Vector3f;
 
 public final class RenderHelper {
     public static void renderModelToBuffer(Model<?> model, PoseStack poseStack, SubmitNodeCollector bufferIn, RenderType renderType, int lightCoords, int overlayCoords, int tintedColor) {
+        if (model instanceof BedrockModelProvider<?> bedrock) {
+            // Submission is deferred. Subsequent entities/blocks can animate or hide these shared bones before drawing.
+            var parts = bedrock.getModelMap().values().stream().filter(part -> part.parent == null)
+                    .map(BedrockPart::copyForRender).toList();
+            float red = ((tintedColor >>> 16) & 255) / 255.0f;
+            float green = ((tintedColor >>> 8) & 255) / 255.0f;
+            float blue = (tintedColor & 255) / 255.0f;
+            float alpha = ((tintedColor >>> 24) & 255) / 255.0f;
+            bufferIn.submitCustomGeometry(poseStack, renderType, (pose, vertexConsumer) -> {
+                PoseStack ps = new PoseStack();
+                ps.last().set(pose);
+                for (BedrockPart part : parts) {
+                    part.render(ps, vertexConsumer, lightCoords, overlayCoords, red, green, blue, alpha);
+                }
+            });
+            return;
+        }
         bufferIn.submitCustomGeometry(poseStack, renderType, (pose, vertexConsumer) -> {
             PoseStack ps = new PoseStack();
             ps.last().set(pose);

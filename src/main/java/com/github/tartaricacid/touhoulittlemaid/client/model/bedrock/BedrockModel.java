@@ -8,11 +8,13 @@ import com.github.tartaricacid.touhoulittlemaid.TouhouLittleMaid;
 import com.github.tartaricacid.touhoulittlemaid.api.entity.IMaid;
 import com.github.tartaricacid.touhoulittlemaid.client.animation.CustomJsAnimationManger;
 import com.github.tartaricacid.touhoulittlemaid.client.animation.HardcodedAnimationManger;
+import com.github.tartaricacid.touhoulittlemaid.client.animation.ScriptEngineHelper;
 import com.github.tartaricacid.touhoulittlemaid.client.animation.inner.IAnimation;
 import com.github.tartaricacid.touhoulittlemaid.client.animation.script.EntityChairWrapper;
 import com.github.tartaricacid.touhoulittlemaid.client.animation.script.EntityMaidWrapper;
 import com.github.tartaricacid.touhoulittlemaid.client.animation.script.ModelRendererWrapper;
 import com.github.tartaricacid.touhoulittlemaid.client.renderer.entity.state.MaidRenderState;
+import com.github.tartaricacid.touhoulittlemaid.client.renderer.entity.EntityChairRenderer.ChairRenderState;
 import com.github.tartaricacid.touhoulittlemaid.client.resource.CustomPackLoader;
 import com.github.tartaricacid.touhoulittlemaid.entity.item.EntityChair;
 import com.google.common.collect.Lists;
@@ -52,8 +54,11 @@ public class BedrockModel<T extends LivingEntityRenderState> extends AbstractBed
     @Override
     @ParametersAreNonnullByDefault
     public void setupAnim(T state) {
-        if (animations != null && state instanceof MaidRenderState maidState) {
-            Invocable invocable = (Invocable) CustomJsAnimationManger.NASHORN;
+        // Models are shared by all entities using a model ID. Never inherit a previous entity's hidden bones or scale.
+        modelMapWrapper.values().forEach(ModelRendererWrapper::resetPose);
+        if (state instanceof MaidRenderState maidState) {
+            this.animations = maidState.animations;
+            Invocable invocable = (Invocable) ScriptEngineHelper.getEngine();
             float limbSwing = maidState.limbSwing;
             float limbSwingAmount = maidState.limbSwingAmount;
             float ageInTicks = maidState.ageInTicks;
@@ -71,19 +76,27 @@ public class BedrockModel<T extends LivingEntityRenderState> extends AbstractBed
             if (maidState.entity instanceof EntityChair chair) {
                 setupChairAnim(chair, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, invocable);
             }
+        } else if (state instanceof ChairRenderState chairState && chairState.entity != null) {
+            this.animations = chairState.chairAnimations;
+            setupChairAnim(chairState.entity, chairState.walkAnimationPos, chairState.walkAnimationSpeed,
+                    chairState.ageInTicks, chairState.yRot, chairState.xRot, (Invocable) ScriptEngineHelper.getEngine());
         }
     }
 
     @SuppressWarnings("unchecked")
     private void setupMaidAnim(IMaid entityIn, float attackTime, boolean riding, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, Invocable invocable) {
+        if (animations == null) return;
         try {
             for (Object animation : animations) {
                 if (animation instanceof IAnimation) {
                     ((IAnimation<Mob>) animation).setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, 0, entityIn.asEntity(), modelMapWrapper);
                 } else {
                     entityMaidWrapper.setData(entityIn, attackTime, riding);
-                    invocable.invokeMethod(animation, "animation", entityMaidWrapper, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, 0.0625f, modelMapWrapper);
-                    entityMaidWrapper.clearData();
+                    try {
+                        invocable.invokeMethod(animation, "animation", entityMaidWrapper, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, 0.0625f, modelMapWrapper);
+                    } finally {
+                        entityMaidWrapper.clearData();
+                    }
                 }
             }
         } catch (Exception e) {
@@ -94,14 +107,18 @@ public class BedrockModel<T extends LivingEntityRenderState> extends AbstractBed
 
     @SuppressWarnings("unchecked")
     private void setupChairAnim(EntityChair entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, Invocable invocable) {
+        if (animations == null) return;
         try {
             for (Object animation : animations) {
                 if (animation instanceof IAnimation) {
                     ((IAnimation<EntityChair>) animation).setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, 0, entityIn, modelMapWrapper);
                 } else {
                     entityChairWrapper.setData(entityIn);
-                    invocable.invokeMethod(animation, "animation", entityChairWrapper, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, 0.0625f, modelMapWrapper);
-                    entityChairWrapper.clearData();
+                    try {
+                        invocable.invokeMethod(animation, "animation", entityChairWrapper, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, 0.0625f, modelMapWrapper);
+                    } finally {
+                        entityChairWrapper.clearData();
+                    }
                 }
             }
         } catch (Exception e) {

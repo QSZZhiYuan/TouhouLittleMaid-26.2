@@ -56,10 +56,11 @@ public interface IGeoRenderer<T> {
         renderLate(animatable, poseStack, partialTick, bufferSource, buffer, packedLight,
                 packedOverlay, red, green, blue, alpha);
         if (bufferSource != null) {
+            var submittedBones = model.topLevelBones().stream().map(AnimatedGeoBone::copyForRender).toList();
             bufferSource.submitCustomGeometry(poseStack, type, (pose, vertexConsumer) -> {
                 PoseStack ps = new PoseStack();
                 ps.last().set(pose);
-                for (AnimatedGeoBone group : model.topLevelBones()) {
+                for (AnimatedGeoBone group : submittedBones) {
                     renderRecursively(group, ps, vertexConsumer, packedLight, packedOverlay, red, green, blue,
                             alpha);
                 }

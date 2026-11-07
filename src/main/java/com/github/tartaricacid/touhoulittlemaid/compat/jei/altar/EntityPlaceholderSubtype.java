@@ -6,12 +6,12 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
 @SuppressWarnings("removal")
-public class EntityPlaceholderSubtype implements mezz.jei.api.ingredients.subtypes.IIngredientSubtypeInterpreter<ItemStack> {
+public class EntityPlaceholderSubtype implements mezz.jei.api.ingredients.subtypes.ISubtypeInterpreter<ItemStack> {
     @Override
-    public String apply(ItemStack itemStack, UidContext context) {
+    public Object getSubtypeData(ItemStack itemStack, UidContext context) {
         Identifier recipeId = ItemEntityPlaceholder.getId(itemStack);
         if (recipeId == null) {
-            return mezz.jei.api.ingredients.subtypes.IIngredientSubtypeInterpreter.NONE;
+            return null;
         }
         return recipeId.toString();
     }

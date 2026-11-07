@@ -5,9 +5,15 @@ import com.github.tartaricacid.touhoulittlemaid.api.animation.IModelRenderer;
 
 public class ModelRendererWrapper implements IModelRenderer {
     private final BedrockPart modelRenderer;
+    private final BedrockPart initialPose;
 
     public ModelRendererWrapper(BedrockPart modelRenderer) {
         this.modelRenderer = modelRenderer;
+        this.initialPose = modelRenderer.copyPose();
+    }
+
+    public void resetPose() {
+        modelRenderer.restorePose(initialPose);
     }
 
     @Override

@@ -45,14 +45,15 @@ public class TileEntitySnackCabinetRenderer implements BlockEntityRenderer<TileE
     @Override
     public void submit(MaidBlockEntityRenderState state, PoseStack poseStack,
                        SubmitNodeCollector bufferIn, CameraRenderState camera) {
-        if (this.model == null) {
-            this.model = BedrockModelLoader.getModel(BedrockModelLoader.SNACK_CABINET);
+        SimpleBedrockModel<EntityRenderState> currentModel = BedrockModelLoader.getModel(BedrockModelLoader.SNACK_CABINET);
+        if (this.model != currentModel) {
+            this.model = currentModel;
             if (this.model != null) {
                 this.full = this.model.getPart("full");
                 this.half = this.model.getPart("half");
             }
         }
-        if (this.model == null) {
+        if (this.model == null || this.full == null || this.half == null) {
             return;
         }
         TileEntitySnackCabinet cabinet = (TileEntitySnackCabinet) state.blockEntity;

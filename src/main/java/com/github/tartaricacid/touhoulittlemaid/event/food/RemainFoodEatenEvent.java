@@ -4,6 +4,7 @@ import com.github.tartaricacid.touhoulittlemaid.api.event.MaidAfterEatEvent;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.github.tartaricacid.touhoulittlemaid.util.ItemsUtil;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.Item;
@@ -23,6 +24,9 @@ public class RemainFoodEatenEvent {
     @SubscribeEvent
     public static void onAfterMaidEat(MaidAfterEatEvent event) {
         ItemStack foodAfterEat = event.getFoodAfterEat();
+        if (event.isUseRemainderHandled() && foodAfterEat.has(DataComponents.USE_REMAINDER)) {
+            return;
+        }
         if (!foodAfterEat.isEmpty()) {
             ItemStackTemplate craftingRemainderTemplate = foodAfterEat.getItem().getCraftingRemainder();
             ItemStack craftingRemainingItem = craftingRemainderTemplate != null ? craftingRemainderTemplate.create() : ItemStack.EMPTY;
@@ -43,7 +47,7 @@ public class RemainFoodEatenEvent {
                 ItemStack result = ItemHandlerHelper.insertItemStacked(availableInv, craftingRemainingItem, false);
                 // 如果女仆背包满了，掉落在地上
                 if (!result.isEmpty()) {
-                    ItemEntity itemEntity = new ItemEntity(maid.level, maid.getX(), maid.getY(), maid.getZ(), craftingRemainingItem);
+                    ItemEntity itemEntity = new ItemEntity(maid.level, maid.getX(), maid.getY(), maid.getZ(), result);
                     maid.level.addFreshEntity(itemEntity);
                 }
             }

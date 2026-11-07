@@ -112,6 +112,9 @@ public class BedrockModelLoader {
     @SuppressWarnings("unchecked")
     @Nullable
     public static <T extends EntityRenderState> SimpleBedrockModel<T> getModel(Identifier location) {
+        if (BedrockEntityModelRegister.INSTANCE == null) {
+            return null;
+        }
         return (SimpleBedrockModel<T>) BedrockEntityModelRegister.INSTANCE.getModel(location);
     }
 }

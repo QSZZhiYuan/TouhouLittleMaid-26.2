@@ -8,13 +8,34 @@ import org.joml.Vector3f;
 
 public class GlWrapper {
     private static PoseStack poseStack;
+    private static int matrixDepth;
+
+    /** Scope legacy animation transforms to the pose currently being prepared for drawing. */
+    public static void withPoseStack(PoseStack currentPose, Runnable animation) {
+        PoseStack previousPose = poseStack;
+        int previousDepth = matrixDepth;
+        poseStack = currentPose;
+        matrixDepth = 0;
+        try {
+            animation.run();
+        } finally {
+            while (matrixDepth > 0) {
+                currentPose.popPose();
+                matrixDepth--;
+            }
+            poseStack = previousPose;
+            matrixDepth = previousDepth;
+        }
+    }
 
     public static void setPoseStack(PoseStack poseStackIn) {
         poseStack = poseStackIn;
+        matrixDepth = 0;
     }
 
     public static void clearPoseStack() {
         poseStack = null;
+        matrixDepth = 0;
     }
 
     public static void translate(double x, double y, double z) {
@@ -32,10 +53,15 @@ public class GlWrapper {
 
     public static void pushMatrix() {
         poseStack.pushPose();
+        matrixDepth++;
     }
 
     public static void popMatrix() {
+        if (matrixDepth <= 0) {
+            throw new IllegalStateException("Animation cannot pop the renderer's pose stack");
+        }
         poseStack.popPose();
+        matrixDepth--;
     }
 
     private static float normalize(double value) {

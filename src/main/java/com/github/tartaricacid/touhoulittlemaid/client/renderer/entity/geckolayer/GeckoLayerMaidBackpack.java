@@ -9,6 +9,7 @@ import com.github.tartaricacid.touhoulittlemaid.geckolib3.geo.GeoLayerRenderer;
 import com.github.tartaricacid.touhoulittlemaid.geckolib3.geo.IGeoEntityRenderer;
 import com.github.tartaricacid.touhoulittlemaid.geckolib3.geo.animated.ILocationModel;
 import com.github.tartaricacid.touhoulittlemaid.geckolib3.util.RenderUtils;
+import com.github.tartaricacid.touhoulittlemaid.util.RenderHelper;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.renderer.SubmitNodeCollector;
@@ -22,9 +23,8 @@ public class GeckoLayerMaidBackpack<T extends Mob, R extends IGeoEntityRenderer<
     }
 
     protected static void renderColoredCutoutModel(net.minecraft.client.model.EntityModel<?> pModel, Identifier pTextureLocation, PoseStack pPoseStack, SubmitNodeCollector pBuffer, int pPackedLight) {
-        pBuffer.submitCustomGeometry(pPoseStack, RenderTypes.entityCutout(pTextureLocation), (pose, buffer) -> {
-            pModel.renderToBuffer(new PoseStack(), buffer, pPackedLight, net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY, -1);
-        });
+        RenderHelper.renderModelToBuffer(pModel, pPoseStack, pBuffer, RenderTypes.entityCutout(pTextureLocation),
+                pPackedLight, net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY);
     }
 
     @Override

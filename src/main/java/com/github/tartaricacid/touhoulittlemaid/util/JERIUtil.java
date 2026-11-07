@@ -2,9 +2,7 @@ package com.github.tartaricacid.touhoulittlemaid.util;
 
 import com.github.tartaricacid.touhoulittlemaid.crafting.AltarRecipe;
 import com.github.tartaricacid.touhoulittlemaid.init.InitItems;
-import com.github.tartaricacid.touhoulittlemaid.init.InitRecipes;
 import com.github.tartaricacid.touhoulittlemaid.item.ItemEntityPlaceholder;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.NonNullList;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
@@ -17,7 +15,7 @@ public final class JERIUtil {
     public static void recipeWarpHolder(List<RecipeHolder<AltarRecipe>> altarRecipes, AltarRecipeMaker maker) {
         for (RecipeHolder<AltarRecipe> altarRecipeHolder : altarRecipes) {
             AltarRecipe altarRecipe = altarRecipeHolder.value();
-            recipeMaker(maker, altarRecipe);
+            recipeMaker(maker, altarRecipeHolder.id().identifier(), altarRecipe);
         }
     }
 
@@ -28,7 +26,10 @@ public final class JERIUtil {
     }
 
     private static void recipeMaker(AltarRecipeMaker maker, AltarRecipe altarRecipe) {
-        Identifier recipeId = altarRecipe.getId();
+        recipeMaker(maker, altarRecipe.getId(), altarRecipe);
+    }
+
+    private static void recipeMaker(AltarRecipeMaker maker, Identifier recipeId, AltarRecipe altarRecipe) {
         ItemStack output = altarRecipe.getResult();
         if (!altarRecipe.isItemCraft()) {
             output = InitItems.ENTITY_PLACEHOLDER.get().getDefaultInstance();

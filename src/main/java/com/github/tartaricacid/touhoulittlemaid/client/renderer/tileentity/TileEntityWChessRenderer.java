@@ -153,9 +153,7 @@ public class TileEntityWChessRenderer implements BlockEntityRenderer<TileEntityW
     }
 
     private void renderChessboard(PoseStack poseStack, SubmitNodeCollector bufferIn, int combinedLightIn, int combinedOverlayIn, Direction facing) {
-        if (this.chessModel == null) {
-            this.chessModel = BedrockModelLoader.getModel(BedrockModelLoader.WCHESS);
-        }
+        this.chessModel = BedrockModelLoader.getModel(BedrockModelLoader.WCHESS);
         if (this.chessModel == null) {
             return;
         }

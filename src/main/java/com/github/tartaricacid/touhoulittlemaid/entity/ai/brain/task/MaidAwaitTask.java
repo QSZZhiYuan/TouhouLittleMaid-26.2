@@ -15,6 +15,12 @@ public class MaidAwaitTask extends Behavior<EntityMaid> {
     @Override
     protected void start(ServerLevel worldIn, EntityMaid maid, long gameTimeIn) {
         Brain<?> brain = maid.getBrain();
+        if (maid.isMaidInSittingPose()) {
+            brain.eraseMemory(MemoryModuleType.PATH);
+            brain.eraseMemory(MemoryModuleType.WALK_TARGET);
+            maid.getNavigation().stop();
+            return;
+        }
         if (brain.hasMemoryValue(MemoryModuleType.WALK_TARGET)) {
             boolean result = brain.getMemory(MemoryModuleType.WALK_TARGET)
                     .filter(walkTarget -> maid.isWithinHome(walkTarget.getTarget().currentBlockPosition()))

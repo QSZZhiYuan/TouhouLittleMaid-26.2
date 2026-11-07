@@ -28,9 +28,7 @@ public class TileEntityKeyboardRenderer extends TileEntityJoyRenderer<TileEntity
 
     @Override
     public void submit(MaidBlockEntityRenderState state, PoseStack poseStack, SubmitNodeCollector bufferIn, CameraRenderState camera) {
-        if (this.model == null) {
-            this.model = BedrockModelLoader.getModel(BedrockModelLoader.KEYBOARD);
-        }
+        this.model = BedrockModelLoader.getModel(BedrockModelLoader.KEYBOARD);
         if (this.model == null) {
             return;
         }

@@ -68,9 +68,7 @@ public class TileEntityStatueRenderer implements BlockEntityRenderer<TileEntityS
             return;
         }
 
-        if (this.BASE_MODEL == null) {
-            this.BASE_MODEL = BedrockModelLoader.getModel(STATUE_BASE);
-        }
+        this.BASE_MODEL = BedrockModelLoader.getModel(STATUE_BASE);
         if (this.BASE_MODEL != null) {
             poseStack.pushPose();
             this.setTranslateAndPose(te, poseStack);

@@ -16,7 +16,7 @@ import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import vazkii.patchouli.common.item.ItemModBook;
+import vazkii.patchouli.api.PatchouliAPI;
 
 import java.util.Optional;
 
@@ -30,8 +30,7 @@ public class InitCreativeTabs {
             .icon(() -> InitItems.HAKUREI_GOHEI.get().getDefaultInstance())
             .displayItems((par, output) -> {
                 if (ModList.get().isLoaded("patchouli")) {
-                    // TODO: NeoForge 26.2 迁移 - Patchouli 的 ItemModBook.forBook 引用了不存在的 ResourceLocation
-                    // output.accept(ItemModBook.forBook(MEMORIZABLE_GENSOKYO_LOCATION));
+                    output.accept(PatchouliAPI.get().getBookStack(MEMORIZABLE_GENSOKYO_LOCATION));
                 }
                 output.accept(MAID_SPAWN_EGG.get());
                 output.accept(FAIRY_SPAWN_EGG.get());

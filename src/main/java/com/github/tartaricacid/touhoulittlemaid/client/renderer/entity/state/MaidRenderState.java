@@ -3,7 +3,6 @@ package com.github.tartaricacid.touhoulittlemaid.client.renderer.entity.state;
 import com.github.tartaricacid.touhoulittlemaid.client.model.bedrock.BedrockModel;
 import com.github.tartaricacid.touhoulittlemaid.client.resource.pojo.MaidModelInfo;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
@@ -17,7 +16,6 @@ public class MaidRenderState extends LivingEntityRenderState {
     public boolean riding;
     public float limbSwing;
     public float limbSwingAmount;
-    public float ageInTicks;
     public float netHeadYaw;
     public float headPitch;
     public MaidModelInfo info;

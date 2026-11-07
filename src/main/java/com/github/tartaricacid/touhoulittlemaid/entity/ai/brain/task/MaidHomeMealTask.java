@@ -41,7 +41,7 @@ public class MaidHomeMealTask extends MaidCheckRateTask {
         if (!super.checkExtraStartConditions(serverLevel, maid)) {
             return false;
         }
-        if (!maid.getFavorabilityManager().canAdd(Type.HOME_MEAL.getTypeName())) {
+        if (maid.isUsingItem() || !maid.getFavorabilityManager().canAdd(Type.HOME_MEAL.getTypeName())) {
             return false;
         }
         if (maid.getVehicle() instanceof EntitySit sit && sit.getJoyType().equals(Type.ON_HOME_MEAL.getTypeName())) {
@@ -113,7 +113,7 @@ public class MaidHomeMealTask extends MaidCheckRateTask {
             ItemStack refreshItemInHand = maid.getItemInHand(hand);
             for (IMaidMeal maidMeal : maidMeals) {
                 if (maidMeal.canMaidEat(maid, refreshItemInHand, hand)) {
-                    maid.memoryHandItemStack(handItemCopy);
+                    maid.memoryHandItemStack(handItemCopy, hand);
                     maidMeal.onMaidEat(maid, refreshItemInHand, hand);
                     if (maid.getOwner() instanceof ServerPlayer serverPlayer) {
                         InitTrigger.MAID_EVENT.get().trigger(serverPlayer, TriggerType.MAID_PICNIC_EAT);

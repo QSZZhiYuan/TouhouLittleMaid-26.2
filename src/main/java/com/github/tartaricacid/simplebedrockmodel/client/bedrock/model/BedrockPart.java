@@ -55,6 +55,34 @@ public class BedrockPart {
         this.z = z;
     }
 
+    public BedrockPart copyPose() {
+        BedrockPart copy = new BedrockPart();
+        copy.restorePose(this);
+        return copy;
+    }
+
+    public void restorePose(BedrockPart pose) {
+        x = pose.x; y = pose.y; z = pose.z;
+        xRot = pose.xRot; yRot = pose.yRot; zRot = pose.zRot;
+        initRotX = pose.initRotX; initRotY = pose.initRotY; initRotZ = pose.initRotZ;
+        offsetX = pose.offsetX; offsetY = pose.offsetY; offsetZ = pose.offsetZ;
+        xScale = pose.xScale; yScale = pose.yScale; zScale = pose.zScale;
+        visible = pose.visible;
+        illuminated = pose.illuminated;
+        mirror = pose.mirror;
+        additionalQuaternion.set(pose.additionalQuaternion);
+    }
+
+    /** Freeze mutable bones, sharing only the immutable cube geometry with the source. */
+    public BedrockPart copyForRender() {
+        BedrockPart copy = copyPose();
+        copy.cubes.addAll(cubes);
+        for (BedrockPart child : children) {
+            copy.addChild(child.copyForRender());
+        }
+        return copy;
+    }
+
     public void render(PoseStack poseStack, VertexConsumer consumer, int lightmap, int overlay) {
         this.render(poseStack, consumer, lightmap, overlay, 1.0F, 1.0F, 1.0F, 1.0F);
     }

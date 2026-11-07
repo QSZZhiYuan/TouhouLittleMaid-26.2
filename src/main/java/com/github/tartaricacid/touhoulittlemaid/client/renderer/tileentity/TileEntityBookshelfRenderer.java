@@ -28,9 +28,7 @@ public class TileEntityBookshelfRenderer extends TileEntityJoyRenderer<TileEntit
 
     @Override
     public void submit(MaidBlockEntityRenderState state, PoseStack poseStack, SubmitNodeCollector bufferIn, CameraRenderState camera) {
-        if (this.model == null) {
-            this.model = BedrockModelLoader.getModel(BedrockModelLoader.BOOKSHELF);
-        }
+        this.model = BedrockModelLoader.getModel(BedrockModelLoader.BOOKSHELF);
         if (this.model == null) {
             return;
         }

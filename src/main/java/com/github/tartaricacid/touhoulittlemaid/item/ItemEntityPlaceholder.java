@@ -2,11 +2,10 @@ package com.github.tartaricacid.touhoulittlemaid.item;
 
 import com.github.tartaricacid.touhoulittlemaid.TouhouLittleMaid;
 import com.github.tartaricacid.touhoulittlemaid.crafting.AltarRecipe;
+import com.github.tartaricacid.touhoulittlemaid.client.event.AltarRecipesReceivedEvent;
 import com.github.tartaricacid.touhoulittlemaid.init.InitDataComponent;
 import com.github.tartaricacid.touhoulittlemaid.init.InitItems;
 import com.github.tartaricacid.touhoulittlemaid.init.InitRecipes;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -59,14 +58,10 @@ public class ItemEntityPlaceholder extends Item {
 
     @OnlyIn(Dist.CLIENT)
     public static void fillItemCategory(CreativeModeTab.Output items) {
-        ClientLevel world = Minecraft.getInstance().level;
-        if (world == null || world.getServer() == null) {
-            return;
-        }
-        world.getServer().getRecipeManager().getRecipes().stream()
-                .filter(recipe -> recipe.value().getType() == InitRecipes.ALTAR_CRAFTING.get())
+        AltarRecipesReceivedEvent.getRecipes().stream()
                 .forEach(recipe -> {
-                    if (recipe.value() instanceof AltarRecipe altarRecipe && !altarRecipe.isItemCraft()) {
+                    AltarRecipe altarRecipe = recipe.value();
+                    if (!altarRecipe.isItemCraft()) {
                         items.accept(setRecipeId(new ItemStack(InitItems.ENTITY_PLACEHOLDER.get()), altarRecipe.getRecipeString()));
                     }
                 });

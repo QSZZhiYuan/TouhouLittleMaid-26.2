@@ -52,6 +52,7 @@ public class EntityMaidRenderer extends MobRenderer<Mob, MaidRenderState, Bedroc
     private static final String DEFAULT_MODEL_ID = "touhou_little_maid:hakurei_reimu";
     public static @Nullable Function<EntityRendererProvider.Context, IGeoEntityRenderer<Mob>> YSM_ENTITY_MAID_RENDERER;
     private final GeckoEntityMaidRenderer geckoEntityMaidRenderer;
+    private final BedrockModel<LivingEntityRenderState> fallbackModel;
     private @Nullable IGeoEntityRenderer<Mob> ysmMaidRenderer;
     private ChatBubbleRenderer chatBubbleRenderer2;
     private MaidModelInfo mainInfo;
@@ -60,6 +61,7 @@ public class EntityMaidRenderer extends MobRenderer<Mob, MaidRenderState, Bedroc
 
     public EntityMaidRenderer(EntityRendererProvider.Context manager) {
         super(manager, new BedrockModel<>(), 0.5f);
+        this.fallbackModel = this.model;
         this.addLayer((RenderLayer) new LayerMaidHeldItem(this, net.minecraft.client.Minecraft.getInstance().getEntityRenderDispatcher().getItemInHandRenderer()));
         this.addLayer((RenderLayer) new LayerMaidBipedHead(this, manager.getModelSet()));
         this.addLayer((RenderLayer) new LayerMaidBackpack(this, manager.getModelSet()));
@@ -99,6 +101,8 @@ public class EntityMaidRenderer extends MobRenderer<Mob, MaidRenderState, Bedroc
         state.limbSwing = entity.walkAnimation.position(partialTicks);
         state.limbSwingAmount = entity.walkAnimation.speed(partialTicks);
         state.ageInTicks = entity.tickCount + partialTicks;
+        state.netHeadYaw = state.yRot;
+        state.headPitch = state.xRot;
         state.partialTick = partialTicks;
 
         IMaid maid = IMaid.convert(entity);
@@ -106,9 +110,9 @@ public class EntityMaidRenderer extends MobRenderer<Mob, MaidRenderState, Bedroc
             return;
         }
 
-        CustomPackLoader.MAID_MODELS.getModel(DEFAULT_MODEL_ID).ifPresent(model -> this.model = model);
-        CustomPackLoader.MAID_MODELS.getInfo(DEFAULT_MODEL_ID).ifPresent(info -> this.mainInfo = info);
-        CustomPackLoader.MAID_MODELS.getAnimation(DEFAULT_MODEL_ID).ifPresent(animations -> this.mainAnimations = animations);
+        this.model = CustomPackLoader.MAID_MODELS.getModel(DEFAULT_MODEL_ID).orElse(this.fallbackModel);
+        this.mainInfo = CustomPackLoader.MAID_MODELS.getInfo(DEFAULT_MODEL_ID).orElse(null);
+        this.mainAnimations = CustomPackLoader.MAID_MODELS.getAnimation(DEFAULT_MODEL_ID).orElse(null);
 
         MaidModels.ModelData eventModelData = new MaidModels.ModelData(model, mainInfo, mainAnimations);
         if (NeoForge.EVENT_BUS.post(new RenderMaidEvent(maid, eventModelData)).isCanceled()) {
@@ -121,7 +125,7 @@ public class EntityMaidRenderer extends MobRenderer<Mob, MaidRenderState, Bedroc
         } else {
             CustomPackLoader.MAID_MODELS.getModel(maid.getModelId()).ifPresent(model -> this.model = model);
             CustomPackLoader.MAID_MODELS.getInfo(maid.getModelId()).ifPresent(info -> this.mainInfo = info);
-            CustomPackLoader.MAID_MODELS.getAnimation(maid.getModelId()).ifPresent(animations -> this.mainAnimations = animations);
+            this.mainAnimations = CustomPackLoader.MAID_MODELS.getAnimation(maid.getModelId()).orElse(this.mainAnimations);
         }
 
         state.info = this.mainInfo;
@@ -204,10 +208,8 @@ public class EntityMaidRenderer extends MobRenderer<Mob, MaidRenderState, Bedroc
         }
 
         this.model.setAnimations(this.mainAnimations);
-        GlWrapper.setPoseStack(poseStack);
         this.isGuiPreview = !camera.initialized;
-
-        super.submit(state, poseStack, bufferIn, camera);
+        GlWrapper.withPoseStack(poseStack, () -> super.submit(state, poseStack, bufferIn, camera));
 
     }
 

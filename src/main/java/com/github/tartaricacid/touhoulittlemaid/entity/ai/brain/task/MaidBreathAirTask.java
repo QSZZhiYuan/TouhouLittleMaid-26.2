@@ -141,7 +141,7 @@ public class MaidBreathAirTask extends Behavior<EntityMaid> {
                 ItemStack foodStack = backpackInv.extractItem(i, backpackInv.getStackInSlot(i).getCount(), false);
                 ItemStack handStack = itemInHand.copy();
                 maid.setItemInHand(eanHand, foodStack);
-                maid.memoryHandItemStack(handStack);
+                maid.memoryHandItemStack(handStack, eanHand);
                 itemInHand = maid.getItemInHand(eanHand);
                 hasFood = true;
                 break;

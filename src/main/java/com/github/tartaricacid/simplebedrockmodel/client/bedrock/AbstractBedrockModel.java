@@ -295,7 +295,9 @@ public abstract class AbstractBedrockModel extends Model<EntityRenderState> impl
     @ParametersAreNonnullByDefault
     public void renderBedrockToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, int color) {
         for (BedrockPart model : shouldRender) {
-            model.render(poseStack, buffer, packedLight, packedOverlay);
+            model.render(poseStack, buffer, packedLight, packedOverlay,
+                    ((color >>> 16) & 255) / 255.0f, ((color >>> 8) & 255) / 255.0f,
+                    (color & 255) / 255.0f, ((color >>> 24) & 255) / 255.0f);
         }
     }
 

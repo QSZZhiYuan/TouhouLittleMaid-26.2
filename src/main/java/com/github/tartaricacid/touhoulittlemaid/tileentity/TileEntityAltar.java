@@ -18,7 +18,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.TagValueInput;
-import net.minecraft.world.level.storage.TagValueOutput;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.neoforged.neoforge.items.ItemStackHandler;
@@ -65,13 +64,13 @@ public class TileEntityAltar extends BlockEntity {
         tag.putBoolean(IS_RENDER, isRender);
         tag.putBoolean(CAN_PLACE_ITEM, canPlaceItem);
         tag.putInt(STORAGE_STATE_ID, Block.getId(storageState));
-        TagValueOutput handlerOutput = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, this.getLevel().registryAccess());
-        handler.serialize(handlerOutput);
-        tag.put(STORAGE_ITEM, handlerOutput.buildResult());
+        // Serialize through the supplied registry-aware output: a block entity can be saved before a level is attached.
         tag.putString(DIRECTION, direction.getSerializedName());
         tag.put(STORAGE_BLOCK_LIST, blockPosList.serialize());
         tag.put(CAN_PLACE_ITEM_POS_LIST, canPlaceItemPosList.serialize());
-        output.store("AltarData", CompoundTag.CODEC, tag);
+        ValueOutput altarOutput = output.child("AltarData");
+        altarOutput.store(tag);
+        handler.serialize(altarOutput.child(STORAGE_ITEM));
     }
 
     @Override
@@ -81,10 +80,12 @@ public class TileEntityAltar extends BlockEntity {
         isRender = tag.getBooleanOr(IS_RENDER, false);
         canPlaceItem = tag.getBooleanOr(CAN_PLACE_ITEM, false);
         storageState = Block.stateById(tag.getIntOr(STORAGE_STATE_ID, 0));
-        CompoundTag handlerTag = tag.getCompoundOrEmpty(STORAGE_ITEM);
-        ValueInput handlerInput = TagValueInput.create(ProblemReporter.DISCARDING, this.getLevel().registryAccess(), handlerTag);
+        // Keep reading the nested inventory written by earlier 26.2 builds.
+        ValueInput handlerInput = input.child(STORAGE_ITEM).orElseGet(() ->
+                TagValueInput.create(ProblemReporter.DISCARDING, input.lookup(), tag.getCompoundOrEmpty(STORAGE_ITEM)));
         handler.deserialize(handlerInput);
-        direction = Direction.byName(tag.getStringOr(DIRECTION, ""));
+        Direction savedDirection = Direction.byName(tag.getStringOr(DIRECTION, "south"));
+        direction = savedDirection != null && savedDirection.getAxis().isHorizontal() ? savedDirection : Direction.SOUTH;
         blockPosList.deserialize(tag.getListOrEmpty(STORAGE_BLOCK_LIST));
         canPlaceItemPosList.deserialize(tag.getListOrEmpty(CAN_PLACE_ITEM_POS_LIST));
     }

@@ -52,9 +52,7 @@ public class TileEntityShrineRenderer implements BlockEntityRenderer<TileEntityS
         int combinedLightIn = state.lightCoords;
         int combinedOverlayIn = OverlayTexture.NO_OVERLAY;
         Direction facing = shrine.getBlockState().getValue(BlockGomoku.FACING);
-        if (this.model == null) {
-            this.model = BedrockModelLoader.getModel(BedrockModelLoader.SHRINE);
-        }
+        this.model = BedrockModelLoader.getModel(BedrockModelLoader.SHRINE);
         if (this.model != null) {
             poseStack.pushPose();
             poseStack.translate(0.5, 1.5, 0.5);
