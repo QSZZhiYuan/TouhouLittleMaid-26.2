@@ -189,18 +189,10 @@ public abstract class GeoReplacedEntityRenderer<T extends LivingEntity, E extend
         float limbSwingAmount = 0;
         float limbSwing = 0;
 
-        poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - lerpBodyRot));
-        if (entity.deathTime > 0) {
-            float fall = (entity.deathTime - 1.0F) / 20.0F * 1.6F;
-            fall = Mth.sqrt(fall);
-            if (fall > 1.0F) {
-                fall = 1.0F;
-            }
-            poseStack.mulPose(Axis.ZP.rotationDegrees(fall * 90.0F));
-        } else if (entity.isAutoSpinAttack()) {
-            poseStack.mulPose(Axis.XP.rotationDegrees(-90.0F - entity.getXRot()));
-            poseStack.mulPose(Axis.YP.rotationDegrees(((float) entity.tickCount + partialTick) * 75.0F));
-        }
+        // Keep the vanilla sleeping, death and special-pose transforms on the Gecko render path.
+        HumanoidRenderState rotationState = createRenderState();
+        extractRenderState(entity, rotationState, partialTick);
+        setupRotations(rotationState, poseStack, lerpBodyRot, entity.getScale());
         preRenderCallback(entity, poseStack, partialTick);
         if (!shouldSit && entity.isAlive()) {
             limbSwingAmount = entity.walkAnimation.speed(partialTick);
