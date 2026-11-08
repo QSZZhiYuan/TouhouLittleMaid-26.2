@@ -3,11 +3,11 @@ package com.github.tartaricacid.touhoulittlemaid.client.model;
 
 import com.github.tartaricacid.simplebedrockmodel.client.bedrock.model.BedrockPart;
 import com.github.tartaricacid.touhoulittlemaid.client.model.bedrock.SimpleBedrockModel;
-import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
 
 import java.io.InputStream;
 
-public class EntityBoxModel extends SimpleBedrockModel<LivingEntityRenderState> {
+public class EntityBoxModel extends SimpleBedrockModel<EntityRenderState> {
     private final BedrockPart x1;
     private final BedrockPart x2;
     private final BedrockPart z1;
@@ -24,6 +24,6 @@ public class EntityBoxModel extends SimpleBedrockModel<LivingEntityRenderState> 
     }
 
     @Override
-    public void setupAnim(LivingEntityRenderState state) {
+    public void setupAnim(EntityRenderState state) {
     }
 }
