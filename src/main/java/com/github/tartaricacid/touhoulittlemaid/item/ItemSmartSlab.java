@@ -104,6 +104,9 @@ public class ItemSmartSlab extends AbstractStoreMaidItem {
     }
 
     private InteractionResult spawnNewMaid(UseOnContext context, Player player, Level worldIn, EntityMaid maid) {
+        if (worldIn.isClientSide()) {
+            return InteractionResult.SUCCESS;
+        }
         MaidNumAttachment cap = player.getData(MAID_NUM);
         if (cap.canAdd() || player.isCreative()) {
             if (!player.isCreative()) {
@@ -121,9 +124,7 @@ public class ItemSmartSlab extends AbstractStoreMaidItem {
             player.getCooldowns().addCooldown(BuiltInRegistries.ITEM.getKey(InitItems.SMART_SLAB_EMPTY.get()), 20);
             return InteractionResult.SUCCESS;
         } else {
-            if (worldIn.isClientSide()) {
-                player.sendSystemMessage(Component.translatable("message.touhou_little_maid.owner_maid_num.can_not_add", cap.get(), cap.getMaxNum()));
-            }
+            player.sendSystemMessage(Component.translatable("message.touhou_little_maid.owner_maid_num.can_not_add", cap.get(), cap.getMaxNum()));
             return super.useOn(context);
         }
     }

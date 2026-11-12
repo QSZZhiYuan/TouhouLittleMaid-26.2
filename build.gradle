@@ -253,6 +253,7 @@ tasks.register('regressionTest', JavaExec) {
             'com.github.tartaricacid.touhoulittlemaid.client.animation.GlWrapperTest',
             'com.github.tartaricacid.touhoulittlemaid.client.animation.BedrockPartTest',
             'com.github.tartaricacid.touhoulittlemaid.entity.MaidDataStorageTest',
+            'com.github.tartaricacid.touhoulittlemaid.entity.MaidOwnerDataTest',
             'com.github.tartaricacid.touhoulittlemaid.entity.MaidItemUseTimeTest'
 }
 

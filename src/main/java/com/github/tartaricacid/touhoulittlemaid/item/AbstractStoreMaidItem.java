@@ -7,6 +7,7 @@ import com.github.tartaricacid.touhoulittlemaid.init.InitDataComponent;
 import com.github.tartaricacid.touhoulittlemaid.inventory.tooltip.ItemMaidTooltip;
 import com.github.tartaricacid.touhoulittlemaid.inventory.tooltip.YsmMaidInfo;
 import com.github.tartaricacid.touhoulittlemaid.util.MaidDataStorage;
+import com.github.tartaricacid.touhoulittlemaid.util.MaidOwnerData;
 import com.mojang.serialization.Codec;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
@@ -27,7 +28,6 @@ import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.level.storage.TagValueOutput;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.util.Util;
-import net.minecraft.core.UUIDUtil;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.NeoForge;
 import org.apache.commons.lang3.StringUtils;
@@ -39,7 +39,6 @@ import static com.github.tartaricacid.touhoulittlemaid.init.InitDataComponent.MO
 
 public abstract class AbstractStoreMaidItem extends Item {
     static final String CUSTOM_NAME = "CustomName";
-    private static final String MAID_OWNER = "Owner";
 
     public AbstractStoreMaidItem(Properties properties) {
         super(properties);
@@ -98,13 +97,16 @@ public abstract class AbstractStoreMaidItem extends Item {
         CustomData compoundData = stack.get(InitDataComponent.MAID_INFO);
         if (compoundData != null) {
             CompoundTag maidCompound = compoundData.copyTag();
-            UUID ownerUid = maidCompound.read(MAID_OWNER, UUIDUtil.CODEC).orElse(Util.NIL_UUID);
+            UUID ownerUid = MaidOwnerData.read(maidCompound).orElse(Util.NIL_UUID);
             if (!player.getUUID().equals(ownerUid)) {
                 MutableComponent tip = Component.translatable("tooltips.touhou_little_maid.smart_slab.not_your_maid").withStyle(ChatFormatting.DARK_RED);
                 if (!worldIn.isClientSide()) {
                     player.sendSystemMessage(tip);
                 }
                 return InteractionResult.FAIL;
+            }
+            if (worldIn.isClientSide()) {
+                return InteractionResult.SUCCESS;
             }
 
             var event = new MaidAndItemTransformEvent.ToMaid(maid, stack, maidCompound);

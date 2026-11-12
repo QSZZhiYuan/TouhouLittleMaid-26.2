@@ -699,6 +699,8 @@
   "commands.touhou_little_maid.maid.not_maid": "The target entity is not a maid",
   "commands.touhou_little_maid.maid.no_ai.success": "Successfully set the maid's no AI to %s",
   "commands.touhou_little_maid.maid.xp.success": "Successfully set the maid's XP to %s",
+  "commands.touhou_little_maid.maid.owner.info": "Maid UUID: %s; tamed: %s; owner UUID: %s; owner currently online: %s",
+  "commands.touhou_little_maid.maid.owner.success": "Set maid %s's owner to player UUID %s",
   "argument.touhou_little_maid.handle_type.invalid": "Handle type is invalid",
   "debug.touhou_little_maid.enable.true": "Touhou Little Maid Debugging is enabled",
   "debug.touhou_little_maid.enable.false": "Touhou Little Maid Debugging is disabled",

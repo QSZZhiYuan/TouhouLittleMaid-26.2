@@ -25,6 +25,10 @@ public class DebugStickClickEvent {
         Player player = event.getPlayer();
         EntityMaid maid = event.getMaid();
         if (player.getMainHandItem().is(Items.DEBUG_STICK) && TouhouLittleMaid.DEBUG) {
+            if (event.getWorld().isClientSide()) {
+                event.setCanceled(true);
+                return;
+            }
             if (player.isShiftKeyDown()) {
                 maid.setOwnerReference(EntityReference.of(UUID.randomUUID()));
                 maid.level.broadcastEntityEvent(maid, EntityEvent.TAMING_SUCCEEDED);

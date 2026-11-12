@@ -1,6 +1,7 @@
 package com.github.tartaricacid.touhoulittlemaid.command.subcommand;
 
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
+import com.github.tartaricacid.touhoulittlemaid.world.data.MaidWorldData;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -13,7 +14,10 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.selector.EntitySelector;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+
+import java.util.Objects;
 
 public class MaidCommand {
     private static final String MAID_NAME = "maid";
@@ -21,6 +25,8 @@ public class MaidCommand {
 
     private static final String NO_AI_NAME = "no_ai";
     private static final String XP = "xp";
+    private static final String OWNER = "owner";
+    private static final String PLAYER = "player";
 
     private static final String RESULT_NAME = "result";
 
@@ -36,8 +42,51 @@ public class MaidCommand {
 
         pack.then(targets.then(noAi.then(booleanResult.executes(MaidCommand::handleMaidNoAi))));
         pack.then(targets.then(xp.then(intResult.executes(MaidCommand::handleMaidXp))));
+        pack.then(Commands.argument(TARGETS_NAME, EntityArgument.entity())
+                .then(Commands.literal(OWNER).executes(MaidCommand::showOwner)
+                        .then(Commands.literal("set")
+                                .then(Commands.argument(PLAYER, EntityArgument.player())
+                                        .executes(MaidCommand::setOwner)))));
 
         return pack;
+    }
+
+    private static int showOwner(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        Entity entity = EntityArgument.getEntity(context, TARGETS_NAME);
+        if (!(entity instanceof EntityMaid maid)) {
+            context.getSource().sendFailure(Component.translatable("commands.touhou_little_maid.maid.not_maid"));
+            return 0;
+        }
+        var owner = maid.getOwnerReference();
+        String ownerId = owner == null ? "none" : owner.getUUID().toString();
+        context.getSource().sendSuccess(() -> Component.translatable(
+                "commands.touhou_little_maid.maid.owner.info", maid.getStringUUID(),
+                maid.isTame(), ownerId, maid.getOwner() != null), false);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static int setOwner(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        Entity entity = EntityArgument.getEntity(context, TARGETS_NAME);
+        if (!(entity instanceof EntityMaid maid)) {
+            context.getSource().sendFailure(Component.translatable("commands.touhou_little_maid.maid.not_maid"));
+            return 0;
+        }
+        ServerPlayer player = EntityArgument.getPlayer(context, PLAYER);
+        var previous = maid.getOwnerReference();
+        if (!Objects.equals(previous == null ? null : previous.getUUID(), player.getUUID())) {
+            MaidWorldData data = MaidWorldData.get(maid.level());
+            if (data != null) {
+                data.removeInfo(maid);
+            }
+            maid.setOwner(player);
+            if (data != null) {
+                data.addInfo(maid);
+            }
+        }
+        maid.setTame(true, false);
+        context.getSource().sendSuccess(() -> Component.translatable(
+                "commands.touhou_little_maid.maid.owner.success", maid.getStringUUID(), player.getUUID()), true);
+        return Command.SINGLE_SUCCESS;
     }
 
     private static int handleMaidNoAi(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {

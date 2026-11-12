@@ -62,6 +62,7 @@ import com.github.tartaricacid.touhoulittlemaid.network.message.SyncYsmMaidDataP
 import com.github.tartaricacid.touhoulittlemaid.util.ItemsUtil;
 import com.github.tartaricacid.touhoulittlemaid.util.MaidDataStorage;
 import com.github.tartaricacid.touhoulittlemaid.util.MaidItemUseTime;
+import com.github.tartaricacid.touhoulittlemaid.util.MaidOwnerData;
 import com.github.tartaricacid.touhoulittlemaid.util.ParseI18n;
 import com.github.tartaricacid.touhoulittlemaid.util.TeleportHelper;
 import com.github.tartaricacid.touhoulittlemaid.world.backups.MaidBackupsManager;
@@ -707,10 +708,17 @@ public class EntityMaid extends TamableAnimal implements CrossbowAttackMob, IMai
     }
 
     private InteractionResult tameMaid(ItemStack stack, Player player) {
+        boolean isNormal = !isTame() && getTamedItem().test(stack);
+        boolean isNtr = getNtrItem().test(stack);
+        if (!isNormal && !isNtr) {
+            return InteractionResult.PASS;
+        }
+        // Predict the interaction only. Ownership and item/count changes belong to the server.
+        if (this.level().isClientSide()) {
+            return InteractionResult.SUCCESS;
+        }
         MaidNumAttachment cap = player.getData(MAID_NUM);
         if (cap.canAdd() || player.isCreative()) {
-            boolean isNormal = !isTame() && getTamedItem().test(stack);
-            boolean isNtr = getNtrItem().test(stack);
             if (isNormal || isNtr) {
                 if (!player.isCreative()) {
                     stack.shrink(1);
@@ -1387,6 +1395,8 @@ public class EntityMaid extends TamableAnimal implements CrossbowAttackMob, IMai
     public void addAdditionalSaveData(ValueOutput output) {
         super.addAdditionalSaveData(output);
         CompoundTag compound = new CompoundTag();
+        var owner = this.getOwnerReference();
+        MaidOwnerData.storeBackup(compound, owner == null ? null : owner.getUUID());
         compound.putString(MODEL_ID_TAG_NAME, getModelId());
 
         compound.putBoolean(IS_YSM_MODEL_TAG, isYsmModel());
@@ -1436,8 +1446,12 @@ public class EntityMaid extends TamableAnimal implements CrossbowAttackMob, IMai
 
     @Override
     public void readAdditionalSaveData(ValueInput input) {
-        super.readAdditionalSaveData(input);
-        CompoundTag compound = MaidDataStorage.read(input);
+        var previous = this.getOwnerReference();
+        UUID previousId = previous == null ? null : previous.getUUID();
+        CompoundTag saved = MaidOwnerData.prepareForLoad(input);
+        super.readAdditionalSaveData(TagValueInput.create(ProblemReporter.DISCARDING, this.registryAccess(), saved));
+        logOwnerChange(previousId);
+        CompoundTag compound = MaidDataStorage.read(saved);
         this.taskDataMaps.readSaveData(compound);
         this.setSyncTaskData(this.taskDataMaps.getUpdateTag());
         if (compound.contains(MODEL_ID_TAG_NAME)) {
@@ -2824,6 +2838,38 @@ public class EntityMaid extends TamableAnimal implements CrossbowAttackMob, IMai
 
     public MaidNavigationManager getNavigationManager() {
         return navigationManager;
+    }
+
+    @Override
+    public boolean isOwnedBy(LivingEntity entity) {
+        var owner = this.getOwnerReference();
+        return owner != null && !Util.NIL_UUID.equals(owner.getUUID()) && owner.matches(entity);
+    }
+
+    @Override
+    public void setOwner(@Nullable LivingEntity owner) {
+        this.setOwnerReference(owner == null ? null : EntityReference.of(owner.getUUID()));
+    }
+
+    @Override
+    public void setOwnerReference(@Nullable EntityReference<LivingEntity> owner) {
+        var previous = this.getOwnerReference();
+        UUID previousId = previous == null ? null : previous.getUUID();
+        // Keep a stable UUID, as before 26.2, rather than retaining a mutable player instance.
+        super.setOwnerReference(owner == null ? null : EntityReference.of(owner.getUUID()));
+        logOwnerChange(previousId);
+    }
+
+    private void logOwnerChange(@Nullable UUID previousId) {
+        var owner = this.getOwnerReference();
+        UUID currentId = owner == null ? null : owner.getUUID();
+        if (!this.level().isClientSide() && previousId != null && !Objects.equals(previousId, currentId)) {
+            String caller = StackWalker.getInstance().walk(frames -> frames
+                    .filter(frame -> !EntityMaid.class.getName().equals(frame.getClassName())).findFirst()
+                    .map(frame -> frame.getClassName() + "." + frame.getMethodName()).orElse("unknown"));
+            TouhouLittleMaid.LOGGER.warn("Maid ownership changed: maid={}, previousOwner={}, owner={}, caller={}",
+                    this.getUUID(), previousId, currentId, caller);
+        }
     }
 
     /**
